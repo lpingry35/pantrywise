@@ -1,0 +1,190 @@
+Fetching Food Network URL...
+✓ Fetch successful
+Status: 200
+Content length: 404154
+
+--- Searching for JSON-LD ---
+Found 1 JSON-LD script tags
+
+
+=== JSON-LD Script #1 ===
+Length: 5385
+Type: undefined
+Context: undefined
+
+=== FULL JSON CONTENT ===
+[
+  {
+    "@context": "http://schema.org",
+    "@type": "Recipe",
+    "mainEntityOfPage": true,
+    "name": "3-Ingredient Mac and Cheese",
+    "url": "https://www.foodnetwork.com/recipes/food-network-kitchen/3-ingredient-mac-and-cheese-18926685",
+    "headline": "3-Ingredient Mac and Cheese",
+    "description": "Pasta, milk and cheese all cooked in a single pot may be mac and cheese at its most basic, but this streamlined 3-ingredient version doesn’t skimp on the creamy richness you expect from homemade — and it’s as quick to cook as packaged versions. We experimented with different combinations of dairy to land on our simple formula. For the creamiest results, we like the combination of evaporated milk and American cheese, but you can tweak the recipe by using half-and-half or whole milk if you prefer. Similarly, American cheese gave the dish the creamiest finish, but if you want to vary the flavor you can use half American cheese and half of another good melting cheese — mild Cheddar, Monterey Jack or pepper jack, Colby, Havarti or fontina are all excellent.",
+    "author": [
+      {
+        "@type": "Person",
+        "name": "Food Network Kitchen",
+        "alumniOf": "California Culinary Academy, French Culinary Institute, International Culinary Center",
+        "url": "https://www.foodnetwork.com/profiles/talent/food-network-kitchen"
+      },
+      {
+        "@type": "Person",
+        "name": "Amy Stevenson",
+        "url": "https://www.foodnetwork.com/profiles/editorial/amy-stevenson"
+      }
+    ],
+    "image": [
+      {
+        "@type": "ImageObject",
+        "url": "https://food.fnr.sndimg.com/content/dam/images/food/fullset/2024/05/24/fn_3_ingredient_mac_cheese_s4x3.jpg.rend.hgtvcom.1280.1280.suffix/1716903982457.webp",
+        "height": "1280",
+        "width": "1280"
+      },
+      {
+        "@type": "ImageObject",
+        "url": "https://food.fnr.sndimg.com/content/dam/images/food/fullset/2024/05/24/fn_3_ingredient_mac_cheese_s4x3.jpg.rend.hgtvcom.1280.960.suffix/1716903982457.webp",
+        "height": "960",
+        "width": "1280"
+      },
+      {
+        "@type": "ImageObject",
+        "url": "https://food.fnr.sndimg.com/content/dam/images/food/fullset/2024/05/24/fn_3_ingredient_mac_cheese_s4x3.jpg.rend.hgtvcom.1280.720.suffix/1716903982457.webp",
+        "height": "720",
+        "width": "1280"
+      }
+    ],
+    "datePublished": "2024-02-28T11:10:20.802-05:00",
+    "dateModified": "2024-02-28T11:10:20.517-05:00",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Food Network",
+      "url": "https://www.foodnetwork.com",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://food.fnr.sndimg.com/etc/clientlibs/assets/images/food/fn-logo-flat-60x60.png",
+        "height": "60",
+        "width": "60"
+      }
+    },
+    "keywords": "Comfort Food Restaurants,Macaroni and Cheese,Dairy Recipes,Main Dish,Lunch,Vegetarian",
+    "cookTime": "P0Y0M0DT0H15M0.000S",
+    "totalTime": "P0Y0M0DT0H20M0.000S",
+    "recipeIngredient": [
+      "One 12-ounce can evaporated milk, or 1 1/2 cups half-and-half or whole milk",
+      "Kosher salt",
+      "8 ounces dried elbow macaroni",
+      "8 ounces shredded American cheese, or 4 ounces shredded American cheese and 4 ounces of another shredded melting cheese such mild Cheddar, Monterey Jack, pepper jack, Colby, Havarti or fontina"
+    ],
+    "nutrition": {
+      "@type": "NutritionInformation",
+      "servingSize": "1 of 4 servings",
+      "calories": "509",
+      "fatContent": "25g",
+      "saturatedFatContent": "15g",
+      "carbohydrateContent": "51g",
+      "fiberContent": "2g",
+      "sugarContent": "5g",
+      "proteinContent": "21g",
+      "cholesterolContent": "66mg",
+      "sodiumContent": "603mg"
+    },
+    "recipeInstructions": [
+      {
+        "@type": "HowToStep",
+        "text": "Place the evaporated milk and 1 teaspoon salt in a medium saucepan. Fill the can the milk came in with water (1 1/2 cups) and add it to the pan. Stir in the dried pasta. Bring to a brisk simmer over medium heat. Simmer, stirring often, until the pasta is al dente, 6 to 8 minutes."
+      },
+      {
+        "@type": "HowToStep",
+        "text": "Reduce the heat to low. Stir in the cheese a few handfuls at a time, letting it melt in between additions. Remove from the heat and stir until creamy. Let sit for 5 minutes to thicken up before serving."
+      }
+    ],
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": 4.5,
+      "reviewCount": 2
+    },
+    "recipeYield": "3 to 4 servings",
+    "review": [
+      {
+        "@type": "Review",
+        "author": {
+          "@type": "Person",
+          "name": "Bugyack"
+        },
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": 5,
+          "worstRating": "1",
+          "bestRating": "5"
+        },
+        "reviewBody": "She dug it - used Tillamook Farmstyle Shredded Triple Cheddar Cheese and De Cecco Enriched Macaroni Elbow Pasta - H. was still talking about it, two days later, on her way into grade two this morning. New fave."
+      },
+      {
+        "@type": "Review",
+        "author": {
+          "@type": "Person",
+          "name": "John C."
+        },
+        "reviewRating": {
+          "@type": "Rating",
+          "ratingValue": 4,
+          "worstRating": "1",
+          "bestRating": "5"
+        },
+        "reviewBody": "This sounds VERY much like the 3-Ingredient Mac &amp; Cheese recipe I got from Kenji Lopez-Alt's website several years ago &amp; have been making ever since. It's awesome! The steps/process are a bit different, but essentially, it's the same.<br />Don't get me wrong. Thanks for spreading a GREAT recipe, but I think you should give credit where it's due."
+      }
+    ],
+    "recipeCategory": "main-dish"
+  },
+  {
+    "@context": "http://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "item": {
+          "@id": "https://www.foodnetwork.com",
+          "name": "Home"
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "item": {
+          "@id": "https://www.foodnetwork.com/recipes",
+          "name": "Recipes"
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "item": {
+          "@id": "https://www.foodnetwork.com/recipes/ingredients/pasta",
+          "name": "Pasta"
+        }
+      },
+      {
+        "@type": "ListItem",
+        "position": 4,
+        "item": {
+          "@id": "https://www.foodnetwork.com/recipes/food-network-kitchen/3-ingredient-mac-and-cheese-18926685",
+          "name": "3-Ingredient Mac and Cheese"
+        }
+      }
+    ]
+  }
+]
+=== END JSON ===
+
+
+--- Checking for Microdata ---
+Found 0 microdata Recipe elements
+
+--- Page Info ---
+Title: 3-Ingredient Mac and Cheese Recipe | Food Network Kitchen | Food NetworkX out of Search
+H1: 
+    3-Ingredient Mac and Cheese
+  

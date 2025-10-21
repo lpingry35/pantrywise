@@ -1,0 +1,27 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir src)",
+      "Bash(dir)",
+      "Bash(mkdir srccomponents)",
+      "Bash(mkdir srcpages)",
+      "Bash(mkdir srcutils)",
+      "Bash(mkdir srcdata)",
+      "Bash(mkdir srcstyles)",
+      "Bash(dir /AD src)",
+      "Bash(mkdir -p src/components src/pages src/utils src/data src/styles)",
+      "Bash(npm install -D tailwindcss postcss autoprefixer)",
+      "Bash(npm install react-router-dom)",
+      "Bash(npm start)",
+      "Bash(npm uninstall tailwindcss)",
+      "Bash(npm install -D tailwindcss@^3)",
+      "Bash(npx kill-port 3000)",
+      "Bash(del test-shopping-list.js)",
+      "Bash(npm install)",
+      "Bash(git init)",
+      "Bash(git branch -M main)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

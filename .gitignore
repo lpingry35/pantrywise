@@ -1,0 +1,147 @@
+# ============================================================================
+# .gitignore - Tells Git which files to IGNORE (not upload to GitHub)
+# ============================================================================
+# WHY: This protects your secrets, reduces repository size, and prevents
+#      uploading files that are generated automatically or contain passwords
+# ============================================================================
+
+# ============================================================================
+# 🔐 SECURITY - ENVIRONMENT VARIABLES & SECRETS
+# ============================================================================
+# CRITICAL: These files contain Firebase API keys, authentication secrets, etc.
+# NEVER commit these to GitHub - they would expose your database to hackers!
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Firebase service account keys (contains admin credentials)
+*-firebase-adminsdk-*.json
+serviceAccountKey.json
+firebase-adminsdk.json
+
+# ============================================================================
+# 📦 DEPENDENCIES
+# ============================================================================
+# WHY: node_modules/ contains thousands of files from npm packages
+#      These are downloaded automatically with "npm install"
+#      No need to upload them - they take up 100+ MB of space!
+node_modules/
+functions/node_modules/
+
+# ============================================================================
+# 🏗️ BUILD OUTPUT
+# ============================================================================
+# WHY: These are generated when you run "npm run build"
+#      They're created from your source code, so no need to version them
+build/
+dist/
+.cache/
+out/
+
+# ============================================================================
+# ☁️ DEPLOYMENT
+# ============================================================================
+# WHY: Vercel and Firebase create these folders locally
+#      They contain deployment configs that are specific to your computer
+.vercel
+.vercel/
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+
+# ============================================================================
+# 💻 OPERATING SYSTEM FILES
+# ============================================================================
+# WHY: Your OS creates these hidden files automatically
+#      They're not part of your project code
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+Desktop.ini
+
+# Linux
+*~
+
+# ============================================================================
+# 📝 EDITOR & IDE FILES
+# ============================================================================
+# WHY: Different developers use different code editors
+#      These settings are personal preferences, not project code
+# VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# IntelliJ / WebStorm
+.idea/
+*.iml
+*.iws
+
+# Sublime Text
+*.sublime-workspace
+
+# ============================================================================
+# 🧪 TESTING
+# ============================================================================
+# WHY: Test coverage reports are generated, not written by hand
+coverage/
+*.lcov
+.nyc_output
+
+# ============================================================================
+# 📊 LOGS
+# ============================================================================
+# WHY: Log files can get very large and change constantly
+#      They're useful locally but shouldn't be in version control
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+lerna-debug.log*
+
+# ============================================================================
+# 🔧 TEMPORARY & MISC FILES
+# ============================================================================
+# WHY: These are temporary files that editors/tools create
+*.swp
+*.swo
+*.tmp
+*.temp
+.eslintcache
+
+# ============================================================================
+# 🎯 PROJECT-SPECIFIC NOTES
+# ============================================================================
+# If you have any local notes or TODO files you don't want to share:
+notes.txt
+TODO.md
+PRIVATE.md
+
+# ============================================================================
+# ✅ WHAT WILL BE COMMITTED TO GITHUB?
+# ============================================================================
+# Your actual code files:
+#   - src/ folder (all your React components)
+#   - public/ folder (images, index.html)
+#   - package.json (list of dependencies)
+#   - firebase.json (Firebase configuration - safe to commit)
+#   - README.md (project documentation)
+#   - All .js, .jsx, .css files
+#
+# What WON'T be committed (protected by this file):
+#   - .env (your Firebase secrets)
+#   - node_modules/ (too large)
+#   - build/ (generated files)
+#   - .vercel/ (deployment configs)
+# ============================================================================
