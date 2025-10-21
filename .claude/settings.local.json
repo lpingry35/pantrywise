@@ -19,7 +19,10 @@
       "Bash(del test-shopping-list.js)",
       "Bash(npm install)",
       "Bash(git init)",
-      "Bash(git branch -M main)"
+      "Bash(git branch -M main)",
+      "Bash(git commit -m \"Initial commit - PantryWise Smart Meal Planner\n\n✨ Features:\n- User authentication (Firebase Auth with guest mode)\n- Recipe library with URL import from cooking websites\n- Meal planning calendar (21 slots per week)\n- Smart shopping list with pantry comparison\n- Pantry tracking and ingredient matching\n- Saved meal plans feature\n- Cooking history with star ratings\n- Recipe scraping Firebase Cloud Function\n\n🐛 Bug fixes:\n- Fixed new user empty states for all pages\n- Enhanced empty state UI with gradient cards\n- Fixed recipe loading from user-scoped Firestore\n\n🎨 Design:\n- Modern gradient cards for empty states\n- Responsive layout with Tailwind CSS\n- Lucide React icons throughout\n\n🔐 Security:\n- Environment variables protected with .gitignore\n- User-scoped Firestore security rules\n- Firebase authentication integration\")",
+      "Bash(git remote add origin https://github.com/lpingry35/pantrywise.git)",
+      "Bash(git push -u origin main)"
     ],
     "deny": [],
     "ask": []

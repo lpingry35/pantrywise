@@ -35,7 +35,7 @@ function Home() {
               <br />
               <span className="text-yellow-300">Shop Less,</span>
               <br />
-              Save More
+              Save More 🎉
             </h1>
 
             {/* Subheadline */}
