@@ -177,6 +177,64 @@ export function MealPlanProvider({ children }) {
     setPantryItems(prev => prev.filter((_, index) => index !== indexToRemove));
   };
 
+  // ============================================================================
+  // UPDATE PANTRY ITEM
+  // ============================================================================
+  // WHY: Allows users to edit an existing pantry item's quantity, unit, or name
+  // WHEN: User clicks the "Edit" button on a pantry item
+  // WHAT: Updates the item at the specified index with new values
+  // WHERE: Saves automatically to Firestore via the useEffect hook
+  // ============================================================================
+
+  /**
+   * Updates an existing pantry item
+   * @param {number} index - Position of the item in the pantry array (0-based)
+   * @param {string} newIngredient - New ingredient name
+   * @param {number|string} newQuantity - New quantity value
+   * @param {string} newUnit - New unit (e.g., 'cups', 'oz', 'lb')
+   * @returns {Object} - Result with success status and optional error message
+   */
+  const updatePantryItem = (index, newIngredient, newQuantity, newUnit) => {
+    // VALIDATION: Make sure the index is valid
+    if (index < 0 || index >= pantryItems.length) {
+      return { success: false, error: 'Invalid item index' };
+    }
+
+    // VALIDATION: Make sure ingredient name is not empty
+    const normalizedInput = newIngredient.trim().toLowerCase();
+    if (!normalizedInput) {
+      return { success: false, error: 'Ingredient name cannot be empty' };
+    }
+
+    // VALIDATION: Check for duplicate names (but allow the same name if it's the same item)
+    const duplicateIndex = pantryItems.findIndex((item, i) =>
+      i !== index && item.name.toLowerCase() === normalizedInput
+    );
+
+    if (duplicateIndex !== -1) {
+      return { success: false, error: 'This ingredient already exists in your pantry' };
+    }
+
+    // VALIDATION: Make sure quantity is a positive number
+    const parsedQuantity = parseFloat(newQuantity);
+    if (isNaN(parsedQuantity) || parsedQuantity <= 0) {
+      return { success: false, error: 'Please enter a valid quantity greater than 0' };
+    }
+
+    // UPDATE: Create a new array with the updated item
+    setPantryItems(prev => {
+      const updatedItems = [...prev]; // Make a copy of the array
+      updatedItems[index] = {
+        name: newIngredient.trim(),
+        quantity: parsedQuantity,
+        unit: newUnit || ''
+      };
+      return updatedItems;
+    });
+
+    return { success: true };
+  };
+
   // Clear all pantry items
   const clearPantry = () => {
     setPantryItems([]);
@@ -687,6 +745,7 @@ export function MealPlanProvider({ children }) {
     pantryItems,
     setPantryItems,
     addPantryItem,
+    updatePantryItem, // NEW: Edit existing pantry items
     removePantryItem,
     clearPantry,
     transferShoppingListToPantry,

@@ -6,11 +6,25 @@ import { Package } from 'lucide-react';
 import { formatQuantity } from '../utils/unitConverter';
 
 function MyPantry() {
-  const { pantryItems, addPantryItem, removePantryItem, clearPantry } = useMealPlan();
+  const { pantryItems, addPantryItem, updatePantryItem, removePantryItem, clearPantry } = useMealPlan();
   const [newIngredient, setNewIngredient] = useState('');
   const [quantity, setQuantity] = useState('');
   const [unit, setUnit] = useState('cup');
   const [error, setError] = useState('');
+
+  // ============================================================================
+  // EDIT MODAL STATE
+  // ============================================================================
+  // WHY: Track which item is being edited and show/hide the edit modal
+  // editModalOpen: true = modal is visible, false = modal is hidden
+  // editingIndex: the position (index) of the item being edited
+  // editIngredient/editQuantity/editUnit: temporary values while editing
+  // ============================================================================
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingIndex, setEditingIndex] = useState(null);
+  const [editIngredient, setEditIngredient] = useState('');
+  const [editQuantity, setEditQuantity] = useState('');
+  const [editUnit, setEditUnit] = useState('cup');
 
   const commonUnits = [
     'cup', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'l',
@@ -54,6 +68,77 @@ function MyPantry() {
     if (window.confirm('Are you sure you want to clear all pantry items?')) {
       clearPantry();
     }
+  };
+
+  // ============================================================================
+  // EDIT HANDLERS
+  // ============================================================================
+  // WHY: Handle opening edit modal, saving changes, and canceling edits
+  // WHEN: User clicks Edit button, Save button, or Cancel button
+  // WHAT: Open modal with current values, save changes to context, or close modal
+  // ============================================================================
+
+  /**
+   * Opens the edit modal for a specific pantry item
+   * Pre-fills the form with the current values
+   * @param {number} index - Position of the item to edit
+   */
+  const handleEditIngredient = (index) => {
+    const item = pantryItems[index];
+    setEditingIndex(index);
+    setEditIngredient(item.name);
+    setEditQuantity(item.quantity.toString());
+    setEditUnit(item.unit);
+    setError(''); // Clear any previous errors
+    setEditModalOpen(true);
+  };
+
+  /**
+   * Saves the edited pantry item
+   * Validates input and calls updatePantryItem from context
+   */
+  const handleSaveEdit = (e) => {
+    e.preventDefault();
+
+    // VALIDATION: Make sure all fields are filled
+    if (!editIngredient.trim()) {
+      setError('Please enter an ingredient name');
+      return;
+    }
+
+    if (!editQuantity || parseFloat(editQuantity) <= 0) {
+      setError('Please enter a valid quantity');
+      return;
+    }
+
+    // SAVE: Call the updatePantryItem function from context
+    const result = updatePantryItem(editingIndex, editIngredient, editQuantity, editUnit);
+
+    if (result.success) {
+      // SUCCESS: Close modal and reset form
+      setEditModalOpen(false);
+      setEditingIndex(null);
+      setEditIngredient('');
+      setEditQuantity('');
+      setEditUnit('cup');
+      setError('');
+    } else {
+      // ERROR: Show the error message from context
+      setError(result.error);
+    }
+  };
+
+  /**
+   * Cancels editing and closes the modal
+   * Discards any changes made
+   */
+  const handleCancelEdit = () => {
+    setEditModalOpen(false);
+    setEditingIndex(null);
+    setEditIngredient('');
+    setEditQuantity('');
+    setEditUnit('cup');
+    setError('');
   };
 
   return (
@@ -242,25 +327,50 @@ function MyPantry() {
                       </span>
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleRemoveIngredient(index)}
-                    className="opacity-0 group-hover:opacity-100 transition-opacity text-red-600 hover:text-red-800 p-1 flex-shrink-0"
-                    title="Remove ingredient"
-                  >
-                    <svg
-                      className="w-5 h-5"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
+                  {/* Action Buttons - Edit and Delete */}
+                  <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {/* EDIT BUTTON - Opens modal to edit this item */}
+                    <button
+                      onClick={() => handleEditIngredient(index)}
+                      className="text-blue-600 hover:text-blue-800 p-1 flex-shrink-0"
+                      title="Edit ingredient"
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                      />
-                    </svg>
-                  </button>
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* DELETE BUTTON - Removes this item */}
+                    <button
+                      onClick={() => handleRemoveIngredient(index)}
+                      className="text-red-600 hover:text-red-800 p-1 flex-shrink-0"
+                      title="Remove ingredient"
+                    >
+                      <svg
+                        className="w-5 h-5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -294,6 +404,120 @@ function MyPantry() {
                 toggle "Show recipes I can make with my pantry" to see which recipes match your ingredients!
               </p>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================================
+          EDIT MODAL - Edit existing pantry item
+          ========================================================================
+          SHOW WHEN: User clicks the Edit button on a pantry item
+          PURPOSE: Allow users to modify ingredient name, quantity, or unit
+          BENEFIT: Fix typos or update amounts without deleting and re-adding
+      */}
+      {editModalOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full animate-scale-in">
+            {/* Modal Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 p-6 rounded-t-2xl">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center">
+                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                  </svg>
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-white">Edit Pantry Item</h3>
+                  <p className="text-blue-100 text-sm mt-1">Update the ingredient details below</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleSaveEdit} className="p-6">
+              <div className="space-y-4">
+                {/* Ingredient Name Field */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Ingredient Name
+                  </label>
+                  <input
+                    type="text"
+                    value={editIngredient}
+                    onChange={(e) => {
+                      setEditIngredient(e.target.value);
+                      setError('');
+                    }}
+                    placeholder="e.g., chicken breast, flour, onions"
+                    className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                      error ? 'border-red-500' : 'border-gray-300'
+                    }`}
+                  />
+                </div>
+
+                {/* Quantity and Unit Fields */}
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Quantity
+                    </label>
+                    <input
+                      type="number"
+                      step="0.01"
+                      min="0"
+                      value={editQuantity}
+                      onChange={(e) => {
+                        setEditQuantity(e.target.value);
+                        setError('');
+                      }}
+                      placeholder="e.g., 2"
+                      className={`w-full px-4 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
+                        error ? 'border-red-500' : 'border-gray-300'
+                      }`}
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Unit
+                    </label>
+                    <select
+                      value={editUnit}
+                      onChange={(e) => setEditUnit(e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {commonUnits.map(u => (
+                        <option key={u} value={u}>{u}</option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Error Message */}
+                {error && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded-md">
+                    <p className="text-red-600 text-sm">{error}</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Modal Action Buttons */}
+              <div className="mt-6 flex gap-3">
+                <button
+                  type="submit"
+                  className="flex-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-lg hover:shadow-xl"
+                >
+                  Save Changes
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="flex-1 bg-gray-200 text-gray-800 py-3 px-4 rounded-lg hover:bg-gray-300 transition-colors font-medium"
+                >
+                  Cancel
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
