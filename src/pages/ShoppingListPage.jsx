@@ -2,8 +2,8 @@ import { useState, useMemo } from 'react';
 import { useMealPlan } from '../context/MealPlanContext';
 import { generateShoppingList, exportShoppingListText } from '../utils/shoppingListGenerator';
 import { compareShoppingListWithPantry } from '../utils/ingredientMatching';
-// Import ShoppingCart icon for Shopping List page header
-import { ShoppingCart } from 'lucide-react';
+// Import ShoppingCart icon for Shopping List page header, Trash2 for Clear All button
+import { ShoppingCart, Trash2 } from 'lucide-react';
 // Import formatQuantity for clean display of can units
 import { formatQuantity } from '../utils/unitConverter';
 
@@ -614,6 +614,38 @@ function ShoppingListPage() {
               </p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* ====================================================================
+          CLEAR ALL BUTTON - Connected to Meal Plan
+          ====================================================================
+          WHY: Allow users to clear shopping list (and meal plan)
+          WARNING: Explains that shopping list is generated from meal plan
+          SHOWS: Red destructive button, disabled when list is empty
+          ==================================================================== */}
+      {hasItems && (
+        <div className="mt-6 flex justify-end">
+          <button
+            onClick={() => {
+              const confirmed = window.confirm(
+                '⚠️ Clear Shopping List?\n\n' +
+                'This will:\n' +
+                '• Remove all items from your shopping list\n' +
+                '• Clear your meal plan (shopping list is generated from it)\n\n' +
+                'This action cannot be undone. Continue?'
+              );
+              if (confirmed) {
+                clearMealPlan();
+                console.log('✅ Shopping list and meal plan cleared');
+              }
+            }}
+            disabled={shoppingList.totalItems === 0}
+            className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-semibold flex items-center gap-2"
+          >
+            <Trash2 className="w-4 h-4" />
+            Clear All
+          </button>
         </div>
       )}
 
