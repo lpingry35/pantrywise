@@ -480,10 +480,16 @@ function MealPlannerCalendar() {
         </div>
       </div>
 
-      {/* Calendar Grid */}
+      {/* ====================================================================
+          CALENDAR GRID - FIXED LAYOUT FOR CONSISTENT CELL SIZES
+          ====================================================================
+          CRITICAL: table-fixed ensures ALL columns are equal width
+          WHY: Without this, cells expand based on content (BAD!)
+          RESULT: All cells identical size regardless of content
+          ==================================================================== */}
       <div className="bg-white rounded-lg shadow-md overflow-hidden">
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse min-w-[800px]">
+          <table className="w-full border-collapse min-w-[800px] table-fixed">
             <thead>
               <tr className="bg-gray-100">
                 <th className="p-3 text-left font-semibold text-gray-700 border-r border-gray-200 w-32">
@@ -507,15 +513,16 @@ function MealPlannerCalendar() {
                     const recipeKey = `${day}-${meal}`;
                     const isCooked = cookedRecipes[recipeKey];
                     return (
-                      <td key={`${day}-${meal}`} className="p-2 border-r border-gray-200 last:border-r-0">
+                      <td key={`${day}-${meal}`} className="p-2 border-r border-gray-200 last:border-r-0 min-w-0 overflow-hidden">
                         {recipe ? (
                           // ====================================================================
-                          // FILLED SLOT - FIXED HEIGHT FOR CONSISTENT GRID ALIGNMENT
+                          // FILLED SLOT - FIXED HEIGHT & WIDTH FOR CONSISTENT GRID
                           // ====================================================================
-                          // WHY: All slots must be same height (140px) to prevent grid jumping
-                          // BENEFIT: Professional, stable layout regardless of recipe name length
+                          // WHY: All slots must be same size (140px height) to prevent jumping
+                          // WIDTH: w-full ensures cell fills table column exactly
+                          // BENEFIT: Professional, stable layout regardless of content
                           // ====================================================================
-                          <div className={`relative group rounded-lg p-2 hover:shadow-md transition-all h-[140px] min-h-[140px] flex flex-col ${
+                          <div className={`relative group rounded-lg p-2 hover:shadow-md transition-all w-full h-[140px] min-h-[140px] flex flex-col ${
                             isCooked
                               ? 'bg-green-50 border-2 border-green-500 opacity-90'
                               : 'bg-blue-50 border-2 border-primary'
@@ -592,9 +599,10 @@ function MealPlannerCalendar() {
                           </div>
                         ) : (
                           // ====================================================================
-                          // EMPTY SLOT - FIXED HEIGHT MATCHES FILLED SLOTS
+                          // EMPTY SLOT - FIXED HEIGHT & WIDTH MATCHES FILLED SLOTS
                           // ====================================================================
-                          // WHY: Same 140px height as filled slots for consistent grid
+                          // WHY: Same size (140px height, 100% width) as filled slots
+                          // WIDTH: w-full ensures cell fills table column exactly
                           // BENEFIT: Grid doesn't jump when adding/removing recipes
                           // ====================================================================
                           <button
