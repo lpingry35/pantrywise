@@ -9,6 +9,7 @@ import AddRecipe from './pages/AddRecipe';
 import MyPantry from './pages/MyPantry';
 import MealPlanner from './pages/MealPlanner';
 import ShoppingListPage from './pages/ShoppingListPage';
+import StatsAndInsights from './pages/StatsAndInsights';
 import FirebaseTest from './pages/FirebaseTest';
 import FirebaseDebug from './pages/FirebaseDebug';
 import Login from './pages/Login';
@@ -110,6 +111,17 @@ function App() {
                     <>
                       <Navigation />
                       <ShoppingListPage />
+                    </>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/stats"
+                element={
+                  <ProtectedRoute>
+                    <>
+                      <Navigation />
+                      <StatsAndInsights />
                     </>
                   </ProtectedRoute>
                 }

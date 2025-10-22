@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 // Import icons from lucide-react for visual navigation
-import { Home, BookOpen, Package, Calendar, ShoppingCart, LogOut } from 'lucide-react';
+import { Home, BookOpen, Package, Calendar, ShoppingCart, BarChart3, LogOut } from 'lucide-react';
 
 function Navigation() {
   const location = useLocation();
@@ -30,6 +30,7 @@ function Navigation() {
     { path: '/pantry', label: 'My Pantry', icon: Package },
     { path: '/meal-planner', label: 'Meal Planner', icon: Calendar },
     { path: '/shopping-list', label: 'Shopping List', icon: ShoppingCart },
+    { path: '/stats', label: 'Stats & Insights', icon: BarChart3 },
   ];
 
   return (
