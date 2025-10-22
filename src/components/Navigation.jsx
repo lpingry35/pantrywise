@@ -30,7 +30,7 @@ function Navigation() {
     { path: '/pantry', label: 'My Pantry', icon: Package },
     { path: '/meal-planner', label: 'Meal Planner', icon: Calendar },
     { path: '/shopping-list', label: 'Shopping List', icon: ShoppingCart },
-    { path: '/stats', label: 'Stats & Insights', icon: BarChart3 },
+    { path: '/stats', label: 'Insights', icon: BarChart3 },
   ];
 
   return (

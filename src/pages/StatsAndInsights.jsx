@@ -89,7 +89,7 @@ function StatsAndInsights() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-800 mb-2 flex items-center gap-3">
           <BarChart3 size={32} className="text-primary" aria-hidden="true" />
-          <span>Stats & Insights</span>
+          <span>Kitchen Insights</span>
         </h1>
         <p className="text-gray-600">
           Track your kitchen activity and recipe collection
