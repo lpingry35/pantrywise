@@ -3,14 +3,15 @@ import { useMealPlan } from '../context/MealPlanContext';
 import RecipeSelectionModal from './RecipeSelectionModal';
 import CookingModal from './CookingModal';
 import sampleRecipes from '../data/sampleRecipes';
-import { getAllRecipes } from '../services/firestoreService';
-import { Star } from 'lucide-react';
+import { getAllRecipes, saveNamedMealPlan } from '../services/firestoreService';
+import { Star, Save } from 'lucide-react';
 
 function MealPlannerCalendar() {
   // Use context for meal plan state
   const {
     mealPlan,
     currentPlanName,
+    setCurrentPlanName,
     addRecipeToSlot,
     removeRecipeFromSlot,
     clearMealPlan,
@@ -38,6 +39,15 @@ function MealPlannerCalendar() {
   const [insufficientIngredients, setInsufficientIngredients] = useState(null);
   const [canProceed, setCanProceed] = useState(true);
   const [cookingMessage, setCookingMessage] = useState({ type: '', text: '' });
+
+  // ============================================================================
+  // SAVE PLAN STATE (moved from SavedMealPlansManager)
+  // ============================================================================
+  // WHY: Integrated save plan functionality directly into My Meal Plan card
+  // BENEFIT: Cleaner interface - save plan UI is part of the main banner
+  // ============================================================================
+  const [planName, setPlanName] = useState('');
+  const [savingPlan, setSavingPlan] = useState(false);
 
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   const dayLabels = {
@@ -291,6 +301,42 @@ function MealPlannerCalendar() {
     }
   };
 
+  // ============================================================================
+  // SAVE MEAL PLAN HANDLER (moved from SavedMealPlansManager)
+  // ============================================================================
+  // WHY: Save current meal plan with a custom name
+  // WHERE: Saves to users/{userId}/savedMealPlans in Firestore
+  // VALIDATION: Requires non-empty plan name and at least 1 recipe
+  // ============================================================================
+  const handleSavePlan = async () => {
+    if (!planName.trim()) {
+      showCookingMessage('error', 'Please enter a name for your meal plan');
+      return;
+    }
+
+    const filledSlots = getFilledSlotsCount();
+    if (filledSlots === 0) {
+      showCookingMessage('error', 'Cannot save an empty meal plan. Add some recipes first!');
+      return;
+    }
+
+    try {
+      setSavingPlan(true);
+      await saveNamedMealPlan(planName.trim(), mealPlan);
+
+      // Update current plan name in context
+      setCurrentPlanName(planName.trim());
+
+      setPlanName('');
+      showCookingMessage('success', `Meal plan "${planName.trim()}" saved successfully!`);
+    } catch (error) {
+      console.error('Error saving meal plan:', error);
+      showCookingMessage('error', 'Failed to save meal plan. Please try again.');
+    } finally {
+      setSavingPlan(false);
+    }
+  };
+
   return (
     <div>
       {/* Cooking Success/Error Message */}
@@ -377,6 +423,58 @@ function MealPlannerCalendar() {
                   {getFilledSlotsCount()}<span className="text-xl text-blue-200">/21</span>
                 </div>
               </div>
+            </div>
+          </div>
+
+          {/* ====================================================================
+              SAVE PLAN SECTION (moved from separate purple box)
+              ====================================================================
+              WHY: Integrated into My Meal Plan card for cleaner interface
+              WHAT: Input field + Save button to save current meal plan
+              WHERE: Saves to users/{userId}/savedMealPlans in Firestore
+              DESIGN: White/transparent styling to match blue gradient theme
+              ==================================================================== */}
+          <div className="relative z-10 px-8 pb-6">
+            <div className="border-t border-white/20 pt-6">
+              <div className="flex items-center gap-2 mb-3">
+                <Save className="w-5 h-5 text-blue-100" />
+                <span className="font-semibold text-white text-lg">Save This Plan</span>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <input
+                  type="text"
+                  placeholder="e.g., Budget Week, Keto Plan, Family Favorites..."
+                  value={planName}
+                  onChange={(e) => setPlanName(e.target.value)}
+                  onKeyPress={(e) => e.key === 'Enter' && handleSavePlan()}
+                  disabled={savingPlan}
+                  className="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30
+                             text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white
+                             focus:bg-white/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                />
+                <button
+                  onClick={handleSavePlan}
+                  disabled={!planName.trim() || getFilledSlotsCount() === 0 || savingPlan}
+                  className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50
+                             disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg
+                             hover:shadow-xl hover:-translate-y-0.5 transform flex items-center justify-center gap-2 whitespace-nowrap"
+                >
+                  {savingPlan ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+                      <span>Saving...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-5 h-5" />
+                      <span>Save Plan</span>
+                    </>
+                  )}
+                </button>
+              </div>
+              <p className="text-xs text-blue-200 mt-2 flex items-center gap-1">
+                📋 {getFilledSlotsCount()} recipe{getFilledSlotsCount() !== 1 ? 's' : ''} in current plan
+              </p>
             </div>
           </div>
         </div>

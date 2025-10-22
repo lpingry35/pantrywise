@@ -176,11 +176,6 @@ function MealPlanner() {
         </div>
       )}
 
-      {/* Save Current Plan Section - Right after current plan banner */}
-      <div className="mb-6">
-        <SavedMealPlansManager showOnlySection="save" />
-      </div>
-
       {/* ====================================================================
           LEFTOVER TRACKING WIDGET (Collapsible)
           ====================================================================
