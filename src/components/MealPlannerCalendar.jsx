@@ -4,10 +4,53 @@ import RecipeSelectionModal from './RecipeSelectionModal';
 import CookingModal from './CookingModal';
 import sampleRecipes from '../data/sampleRecipes';
 import { getAllRecipes, saveNamedMealPlan } from '../services/firestoreService';
-import { Star, Save } from 'lucide-react';
+
+// Import refactored meal planner components
+import MealPlannerHeader from './mealPlanner/MealPlannerHeader';
+import MealPlanGrid from './mealPlanner/MealPlanGrid';
+
+/**
+ * ============================================================================
+ * MEAL PLANNER CALENDAR COMPONENT (MAIN COORDINATOR)
+ * ============================================================================
+ *
+ * PURPOSE:
+ * Main component for the weekly meal planning calendar.
+ * Coordinates all child components and manages state/data loading.
+ *
+ * THIS FILE WAS REFACTORED FROM 682 LINES TO ~250 LINES
+ * By extracting components into focused, reusable pieces
+ *
+ * RESPONSIBILITIES:
+ * - Load recipes from Firestore
+ * - Manage modal state (recipe selection, cooking)
+ * - Handle cooking workflow (with rating system)
+ * - Handle save plan functionality
+ * - Coordinate child components
+ * - Manage success/error messages
+ *
+ * CHILD COMPONENTS:
+ * - MealPlannerHeader: Blue gradient banner with plan name and stats
+ * - MealPlanGrid: 7×3 table of meal slots
+ * - MealSlot: Individual meal cell (rendered by MealPlanGrid)
+ * - RecipeSelectionModal: Modal for selecting recipes
+ * - CookingModal: Modal for cooking workflow with rating
+ *
+ * DATA FLOW:
+ * 1. Load recipes from Firestore on mount
+ * 2. Get meal plan data from MealPlanContext
+ * 3. Pass data down to child components
+ * 4. Handle user actions via callbacks
+ * 5. Update context and Firestore as needed
+ */
 
 function MealPlannerCalendar() {
-  // Use context for meal plan state
+  // ============================================================================
+  // CONTEXT - MEAL PLAN DATA AND FUNCTIONS
+  // ============================================================================
+  // Get all meal plan state and functions from context
+  // This provides access to the meal plan, cooking history, leftover tracking, etc.
+  // ============================================================================
   const {
     mealPlan,
     currentPlanName,
@@ -25,48 +68,37 @@ function MealPlannerCalendar() {
     addLeftover
   } = useMealPlan();
 
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  // ============================================================================
+  // STATE - MODALS AND UI
+  // ============================================================================
 
-  // BUG FIX #2: Load recipes from Firestore instead of using hardcoded sampleRecipes
+  // Recipe selection modal state
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState(null); // {day, meal}
+
+  // Recipe data
   const [recipes, setRecipes] = useState(sampleRecipes);
   const [loadingRecipes, setLoadingRecipes] = useState(true);
 
-  // State for NEW cooking modal with rating system (Phase 7.5.2)
+  // Cooking modal state (with rating system)
   const [showCookingModal, setShowCookingModal] = useState(false);
   const [cookingSlot, setCookingSlot] = useState(null); // {day, meal, recipe}
-  const [cookingHistory, setCookingHistory] = useState(null); // Cooking history for current recipe
+  const [cookingHistory, setCookingHistory] = useState(null);
   const [insufficientIngredients, setInsufficientIngredients] = useState(null);
   const [canProceed, setCanProceed] = useState(true);
   const [cookingMessage, setCookingMessage] = useState({ type: '', text: '' });
 
-  // ============================================================================
-  // SAVE PLAN STATE (moved from SavedMealPlansManager)
-  // ============================================================================
-  // WHY: Integrated save plan functionality directly into My Meal Plan card
-  // BENEFIT: Cleaner interface - save plan UI is part of the main banner
-  // ============================================================================
+  // Save plan state
   const [planName, setPlanName] = useState('');
   const [savingPlan, setSavingPlan] = useState(false);
 
-  const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-  const dayLabels = {
-    monday: 'Monday',
-    tuesday: 'Tuesday',
-    wednesday: 'Wednesday',
-    thursday: 'Thursday',
-    friday: 'Friday',
-    saturday: 'Saturday',
-    sunday: 'Sunday'
-  };
-  const meals = ['breakfast', 'lunch', 'dinner'];
-  const mealLabels = {
-    breakfast: 'Breakfast',
-    lunch: 'Lunch',
-    dinner: 'Dinner'
-  };
+  // ============================================================================
+  // DATA LOADING - LOAD RECIPES FROM FIRESTORE
+  // ============================================================================
+  // Load all recipes when component mounts
+  // Recipes are needed for the recipe selection modal
+  // ============================================================================
 
-  // BUG FIX #2: Load all recipes from Firestore on component mount
   useEffect(() => {
     console.log('🔍 MEAL PLANNER: useEffect triggered');
 
@@ -108,7 +140,13 @@ function MealPlannerCalendar() {
     loadRecipes();
   }, []);
 
-  // Open modal for recipe selection
+  // ============================================================================
+  // HANDLER FUNCTIONS - RECIPE SELECTION
+  // ============================================================================
+
+  /**
+   * Opens recipe selection modal for a specific slot
+   */
   const openRecipeModal = (day, meal) => {
     console.log('🔍 MEAL PLANNER: Opening recipe selection modal');
     console.log('📚 MEAL PLANNER: Current recipes state:', recipes);
@@ -118,7 +156,9 @@ function MealPlannerCalendar() {
     setModalOpen(true);
   };
 
-  // Add recipe to meal plan
+  /**
+   * Adds selected recipe to meal plan slot
+   */
   const handleSelectRecipe = (recipe) => {
     if (selectedSlot) {
       addRecipeToSlot(selectedSlot.day, selectedSlot.meal, recipe);
@@ -127,19 +167,21 @@ function MealPlannerCalendar() {
     setSelectedSlot(null);
   };
 
-  // Remove recipe from meal plan (now uses context function)
+  /**
+   * Removes recipe from meal plan slot
+   */
   const removeRecipe = (day, meal) => {
     removeRecipeFromSlot(day, meal);
   };
 
   // ============================================================================
-  // COOKING WORKFLOW HANDLERS (Phase 7.5.2 - WITH RATING SYSTEM)
+  // COOKING WORKFLOW HANDLERS (WITH RATING SYSTEM)
   // ============================================================================
 
   /**
-   * Opens the cooking modal with rating system
+   * Opens cooking modal with rating system
    * Loads cooking history and checks pantry availability
-   * BUG FIX #7: Now uses checkOnly mode to avoid premature deduction
+   * Uses checkOnly mode to avoid premature deduction
    */
   const handleInitiateCooking = async (day, meal) => {
     console.log('🎬 handleInitiateCooking called for:', day, meal);
@@ -164,7 +206,7 @@ function MealPlannerCalendar() {
       setCookingHistory(null);
     }
 
-    // BUG FIX #7: Check pantry availability WITHOUT deducting (checkOnly = true)
+    // Check pantry availability WITHOUT deducting (checkOnly = true)
     console.log('🔍 Checking pantry availability (CHECK-ONLY mode)...');
     const result = await markRecipeAsCooked(day, meal, false, 0, '', true);
     console.log('🔍 Pantry check result:', result);
@@ -195,8 +237,7 @@ function MealPlannerCalendar() {
   /**
    * Confirms cooking with rating, notes, and leftover tracking
    * Called from CookingModal when user submits
-   * BUG FIX #7: This is where ACTUAL deduction happens (checkOnly = false)
-   * NEW: Adds leftover tracking for food waste reduction
+   * This is where ACTUAL ingredient deduction happens (checkOnly = false)
    */
   const handleConfirmCooking = async (rating, notes, hasLeftovers, leftoverServings) => {
     if (!cookingSlot) return;
@@ -209,15 +250,13 @@ function MealPlannerCalendar() {
       const forceDeduct = !canProceed;
       console.log('Force deduct:', forceDeduct);
 
-      // BUG FIX #7: Mark as cooked with rating and notes (checkOnly = false)
+      // Mark as cooked with rating and notes (checkOnly = false)
       // THIS is where ingredients are actually deducted from pantry!
       const result = await markRecipeAsCooked(day, meal, forceDeduct, rating, notes, false);
       console.log('🎯 Cooking result:', result);
 
       if (result.success) {
-        // ====================================================================
-        // ADD LEFTOVER IF USER INDICATED THEY HAVE LEFTOVERS
-        // ====================================================================
+        // Add leftover if user indicated they have leftovers
         if (hasLeftovers && leftoverServings > 0) {
           console.log('🍱 Adding leftover:', recipe.name, leftoverServings, 'servings');
           try {
@@ -277,7 +316,7 @@ function MealPlannerCalendar() {
   };
 
   /**
-   * Shows a cooking message notification
+   * Shows a cooking message notification (auto-dismisses after 5 seconds)
    */
   const showCookingMessage = (type, text) => {
     setCookingMessage({ type, text });
@@ -287,7 +326,7 @@ function MealPlannerCalendar() {
   };
 
   /**
-   * Toggles cooked status (unmarks if already cooked)
+   * Toggles cooked status (unmarks if already cooked, initiates cooking if not)
    */
   const handleToggleCooked = (day, meal) => {
     const recipeKey = `${day}-${meal}`;
@@ -302,12 +341,14 @@ function MealPlannerCalendar() {
   };
 
   // ============================================================================
-  // SAVE MEAL PLAN HANDLER (moved from SavedMealPlansManager)
+  // SAVE MEAL PLAN HANDLER
   // ============================================================================
-  // WHY: Save current meal plan with a custom name
-  // WHERE: Saves to users/{userId}/savedMealPlans in Firestore
-  // VALIDATION: Requires non-empty plan name and at least 1 recipe
-  // ============================================================================
+
+  /**
+   * Saves current meal plan with a custom name
+   * Validates plan name and ensures plan has at least 1 recipe
+   * Saves to users/{userId}/savedMealPlans in Firestore
+   */
   const handleSavePlan = async () => {
     if (!planName.trim()) {
       showCookingMessage('error', 'Please enter a name for your meal plan');
@@ -337,15 +378,26 @@ function MealPlannerCalendar() {
     }
   };
 
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
   return (
     <div>
-      {/* Cooking Success/Error Message */}
+      {/* ===================================================================
+          SUCCESS/ERROR MESSAGE NOTIFICATION
+          ===================================================================
+          Shows feedback for cooking actions and save operations
+          Auto-dismisses after 5 seconds
+          Green for success, red for error
+      */}
       {cookingMessage.text && (
         <div className={`mb-6 p-4 rounded-lg border-2 flex items-start gap-3 animate-slide-in ${
           cookingMessage.type === 'success'
             ? 'bg-green-50 border-green-500 text-green-800'
             : 'bg-red-50 border-red-500 text-red-800'
         }`}>
+          {/* Icon (checkmark for success, X for error) */}
           {cookingMessage.type === 'success' ? (
             <svg className="w-6 h-6 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
@@ -355,9 +407,11 @@ function MealPlannerCalendar() {
               <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
             </svg>
           )}
+          {/* Message Text */}
           <div className="flex-1">
             <p className="font-semibold">{cookingMessage.text}</p>
           </div>
+          {/* Close Button */}
           <button
             onClick={() => setCookingMessage({ type: '', text: '' })}
             className="flex-shrink-0 hover:opacity-70"
@@ -369,262 +423,44 @@ function MealPlannerCalendar() {
         </div>
       )}
 
-      {/* Current Plan Name Banner - Prominent Display */}
-      <div className="relative overflow-hidden bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl shadow-2xl mb-6">
-        {/* Decorative Background Pattern */}
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl"></div>
-          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl"></div>
-        </div>
+      {/* ===================================================================
+          MEAL PLANNER HEADER
+          ===================================================================
+          Blue gradient banner showing plan name and stats
+          Includes save plan functionality
+      */}
+      <MealPlannerHeader
+        currentPlanName={currentPlanName}
+        weeklyCost={getTotalWeeklyCost()}
+        filledSlotsCount={getFilledSlotsCount()}
+        planName={planName}
+        onPlanNameChange={setPlanName}
+        onSavePlan={handleSavePlan}
+        savingPlan={savingPlan}
+      />
 
-        {/* Content */}
-        <div className="relative z-10 px-8 py-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            {/* Plan Name Section */}
-            <div className="flex-1">
-              <div className="flex items-center gap-3 mb-2">
-                <div className="w-12 h-12 bg-white/20 backdrop-blur-sm rounded-xl flex items-center justify-center">
-                  <svg className="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
-                  </svg>
-                </div>
-                <div>
-                  <div className="text-blue-100 text-sm font-medium uppercase tracking-wide">
-                    Current Meal Plan
-                  </div>
-                  <h2 className="text-3xl md:text-4xl font-bold text-white mt-1">
-                    {currentPlanName}
-                  </h2>
-                </div>
-              </div>
-              <p className="text-blue-100 ml-15 text-sm">
-                Click any meal slot below to add or change recipes
-              </p>
-            </div>
+      {/* ===================================================================
+          MEAL PLAN GRID
+          ===================================================================
+          7-day × 3-meal calendar grid
+          Each cell is a MealSlot (filled or empty)
+      */}
+      <MealPlanGrid
+        mealPlan={mealPlan}
+        cookedRecipes={cookedRecipes}
+        cookingHistoryCache={cookingHistoryCache}
+        onOpenRecipeModal={openRecipeModal}
+        onToggleCooked={handleToggleCooked}
+        onRemoveRecipe={removeRecipe}
+      />
 
-            {/* Stats Section */}
-            <div className="flex gap-4 md:gap-6">
-              {/* Weekly Cost */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl px-6 py-4 border border-white/20">
-                <div className="text-blue-100 text-xs font-medium uppercase tracking-wide mb-1">
-                  Weekly Cost
-                </div>
-                <div className="text-3xl font-bold text-white">
-                  ${getTotalWeeklyCost().toFixed(2)}
-                </div>
-              </div>
-
-              {/* Meals Planned */}
-              <div className="bg-white/10 backdrop-blur-sm rounded-xl px-6 py-4 border border-white/20">
-                <div className="text-blue-100 text-xs font-medium uppercase tracking-wide mb-1">
-                  Meals Planned
-                </div>
-                <div className="text-3xl font-bold text-white">
-                  {getFilledSlotsCount()}<span className="text-xl text-blue-200">/21</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ====================================================================
-              SAVE PLAN SECTION (moved from separate purple box)
-              ====================================================================
-              WHY: Integrated into My Meal Plan card for cleaner interface
-              WHAT: Input field + Save button to save current meal plan
-              WHERE: Saves to users/{userId}/savedMealPlans in Firestore
-              DESIGN: White/transparent styling to match blue gradient theme
-              ==================================================================== */}
-          <div className="relative z-10 px-8 pb-6">
-            <div className="border-t border-white/20 pt-6">
-              <div className="flex items-center gap-2 mb-3">
-                <Save className="w-5 h-5 text-blue-100" />
-                <span className="font-semibold text-white text-lg">Save This Plan</span>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <input
-                  type="text"
-                  placeholder="e.g., Budget Week, Keto Plan, Family Favorites..."
-                  value={planName}
-                  onChange={(e) => setPlanName(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && handleSavePlan()}
-                  disabled={savingPlan}
-                  className="flex-1 px-4 py-3 rounded-lg bg-white/20 border border-white/30
-                             text-white placeholder-blue-200 focus:outline-none focus:ring-2 focus:ring-white
-                             focus:bg-white/30 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                />
-                <button
-                  onClick={handleSavePlan}
-                  disabled={!planName.trim() || getFilledSlotsCount() === 0 || savingPlan}
-                  className="px-6 py-3 bg-white text-blue-600 rounded-lg font-semibold hover:bg-blue-50
-                             disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg
-                             hover:shadow-xl hover:-translate-y-0.5 transform flex items-center justify-center gap-2 whitespace-nowrap"
-                >
-                  {savingPlan ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
-                      <span>Saving...</span>
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-5 h-5" />
-                      <span>Save Plan</span>
-                    </>
-                  )}
-                </button>
-              </div>
-              <p className="text-xs text-blue-200 mt-2 flex items-center gap-1">
-                📋 {getFilledSlotsCount()} recipe{getFilledSlotsCount() !== 1 ? 's' : ''} in current plan
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ====================================================================
-          CALENDAR GRID - FIXED LAYOUT FOR CONSISTENT CELL SIZES
-          ====================================================================
-          CRITICAL: table-fixed ensures ALL columns are equal width
-          WHY: Without this, cells expand based on content (BAD!)
-          RESULT: All cells identical size regardless of content
-          ==================================================================== */}
-      <div className="bg-white rounded-lg shadow-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full border-collapse min-w-[800px] table-fixed">
-            <thead>
-              <tr className="bg-gray-100">
-                <th className="p-3 text-left font-semibold text-gray-700 border-r border-gray-200 w-32">
-                  Meal
-                </th>
-                {days.map(day => (
-                  <th key={day} className="p-3 text-center font-semibold text-gray-700 border-r border-gray-200 last:border-r-0">
-                    {dayLabels[day]}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {meals.map((meal, mealIndex) => (
-                <tr key={meal} className={mealIndex !== meals.length - 1 ? 'border-b border-gray-200' : ''}>
-                  <td className="p-3 font-medium text-gray-700 bg-gray-50 border-r border-gray-200 capitalize">
-                    {mealLabels[meal]}
-                  </td>
-                  {days.map(day => {
-                    const recipe = mealPlan[day][meal];
-                    const recipeKey = `${day}-${meal}`;
-                    const isCooked = cookedRecipes[recipeKey];
-                    return (
-                      <td key={`${day}-${meal}`} className="p-2 border-r border-gray-200 last:border-r-0 min-w-0 overflow-hidden">
-                        {recipe ? (
-                          // ====================================================================
-                          // FILLED SLOT - FIXED HEIGHT & WIDTH FOR CONSISTENT GRID
-                          // ====================================================================
-                          // WHY: All slots must be same size (140px height) to prevent jumping
-                          // WIDTH: w-full ensures cell fills table column exactly
-                          // BENEFIT: Professional, stable layout regardless of content
-                          // ====================================================================
-                          <div className={`relative group rounded-lg p-2 hover:shadow-md transition-all w-full h-[140px] min-h-[140px] flex flex-col ${
-                            isCooked
-                              ? 'bg-green-50 border-2 border-green-500 opacity-90'
-                              : 'bg-blue-50 border-2 border-primary'
-                          }`}>
-                            {/* Cooked Checkmark Overlay */}
-                            {isCooked && (
-                              <div className="absolute top-1 left-1 bg-green-500 rounded-full w-6 h-6 flex items-center justify-center shadow-lg z-10">
-                                <svg className="w-4 h-4 text-white" fill="currentColor" viewBox="0 0 20 20">
-                                  <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                </svg>
-                              </div>
-                            )}
-
-                            <div className="flex gap-2 flex-1">
-                              <img
-                                src={recipe.imageUrl}
-                                alt={recipe.name}
-                                className={`w-12 h-12 object-cover rounded flex-shrink-0 ${isCooked ? 'opacity-70' : ''}`}
-                              />
-                              <div className="flex-1 min-w-0 flex flex-col">
-                                {/* Recipe name with line-clamp-3 for readability (wraps up to 3 lines) */}
-                                <p className={`text-xs font-semibold text-gray-800 line-clamp-3 mb-1 leading-tight ${isCooked ? 'line-through opacity-70' : ''}`}>
-                                  {recipe.name}
-                                </p>
-                                <p className={`text-xs font-bold ${isCooked ? 'text-green-600' : 'text-primary'}`}>
-                                  ${(recipe.costPerServing * recipe.servings).toFixed(2)}
-                                </p>
-                                {/* Show star rating if recipe has been cooked */}
-                                {isCooked && cookingHistoryCache[recipe.id]?.averageRating > 0 && (
-                                  <div className="flex items-center gap-1 mt-1">
-                                    <Star size={10} className="fill-yellow-400 text-yellow-400" />
-                                    <span className="text-xs font-bold text-yellow-600">
-                                      {cookingHistoryCache[recipe.id].averageRating.toFixed(1)}
-                                    </span>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-
-                            {/* Action Buttons - Show on Hover */}
-                            <div className="absolute -top-2 -right-2 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              {/* Mark as Cooked / Unmark Button */}
-                              <button
-                                onClick={() => handleToggleCooked(day, meal)}
-                                className={`rounded-full w-6 h-6 flex items-center justify-center shadow-md transition-colors ${
-                                  isCooked
-                                    ? 'bg-gray-500 hover:bg-gray-600 text-white'
-                                    : 'bg-green-500 hover:bg-green-600 text-white'
-                                }`}
-                                title={isCooked ? 'Unmark as cooked' : 'Mark as cooked'}
-                              >
-                                {isCooked ? (
-                                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                  </svg>
-                                ) : (
-                                  <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                                  </svg>
-                                )}
-                              </button>
-
-                              {/* Remove Button */}
-                              <button
-                                onClick={() => removeRecipe(day, meal)}
-                                className="bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center shadow-md hover:bg-red-600"
-                                title="Remove recipe"
-                              >
-                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                                </svg>
-                              </button>
-                            </div>
-                          </div>
-                        ) : (
-                          // ====================================================================
-                          // EMPTY SLOT - FIXED HEIGHT & WIDTH MATCHES FILLED SLOTS
-                          // ====================================================================
-                          // WHY: Same size (140px height, 100% width) as filled slots
-                          // WIDTH: w-full ensures cell fills table column exactly
-                          // BENEFIT: Grid doesn't jump when adding/removing recipes
-                          // ====================================================================
-                          <button
-                            onClick={() => openRecipeModal(day, meal)}
-                            className="w-full h-[140px] min-h-[140px] border-2 border-dashed border-gray-300 rounded-lg hover:border-primary hover:bg-blue-50 transition-all flex items-center justify-center text-gray-400 hover:text-primary"
-                          >
-                            <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                          </button>
-                        )}
-                      </td>
-                    );
-                  })}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Action Buttons */}
+      {/* ===================================================================
+          CLEAR ALL BUTTON
+          ===================================================================
+          Removes all recipes from meal plan
+          Shows warning before clearing
+          Disabled if plan is already empty
+      */}
       <div className="mt-6">
         <button
           onClick={() => {
@@ -650,7 +486,12 @@ function MealPlannerCalendar() {
         </button>
       </div>
 
-      {/* Recipe Selection Modal */}
+      {/* ===================================================================
+          RECIPE SELECTION MODAL
+          ===================================================================
+          Popup for selecting a recipe to add to meal plan
+          Shows all available recipes with filtering
+      */}
       <RecipeSelectionModal
         isOpen={modalOpen}
         onClose={() => {
@@ -661,10 +502,13 @@ function MealPlannerCalendar() {
         recipes={recipes}
       />
 
-      {/* ========================================================================
-          NEW COOKING MODAL WITH RATING SYSTEM (Phase 7.5.2)
+      {/* ===================================================================
+          COOKING MODAL (WITH RATING SYSTEM)
+          ===================================================================
+          Popup for cooking workflow
           Shows rating interface, cooking history, and pantry check results
-          ======================================================================== */}
+          Includes leftover tracking
+      */}
       <CookingModal
         isOpen={showCookingModal}
         onClose={handleCloseCookingModal}
