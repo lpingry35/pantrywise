@@ -12,6 +12,7 @@ import {
 } from '../services/firestoreService';
 import { normalizeIngredient } from '../utils/ingredientMatching';
 import { convertUnit } from '../utils/unitConverter';
+import { useAuth } from './AuthContext';
 
 // Create the context
 const MealPlanContext = createContext();
@@ -38,6 +39,10 @@ const initialMealPlan = {
 
 // Provider component
 export function MealPlanProvider({ children }) {
+  // Get current user from auth context
+  // CRITICAL: This allows us to reload data when user logs in/out
+  const { currentUser } = useAuth();
+
   const [mealPlan, setMealPlan] = useState(initialMealPlan);
   const [currentPlanName, setCurrentPlanName] = useState('My Meal Plan'); // Track current plan name
   const [pantryItems, setPantryItems] = useState([]);
@@ -58,40 +63,73 @@ export function MealPlanProvider({ children }) {
   // ============================================================================
   const [leftovers, setLeftovers] = useState([]);
 
-  // Load meal plan and pantry from Firestore on mount
+  // ============================================================================
+  // LOAD USER DATA - RUNS ON LOGIN/LOGOUT
+  // ============================================================================
+  // This effect loads meal plan, pantry, and leftovers from Firestore
+  //
+  // CRITICAL BUG FIX:
+  // Previously this effect had empty dependencies [], so it only ran once on mount.
+  // If the page loaded before user was authenticated, it would load empty data
+  // and never reload when user logged in, causing data loss.
+  //
+  // NOW: Effect depends on currentUser, so it:
+  // 1. Runs when user logs in (loads their saved data)
+  // 2. Runs when user logs out (clears data)
+  // 3. Runs when user switches accounts (loads new user's data)
+  //
+  // This ensures meal plan and shopping list persist across sessions!
+  // ============================================================================
   useEffect(() => {
     async function loadData() {
       try {
         setLoading(true);
 
-        // Load meal plan
-        const firestoreMealPlan = await getMealPlan();
-        if (firestoreMealPlan) {
-          console.log('Loaded meal plan from Firestore');
-          setMealPlan(firestoreMealPlan);
-        } else {
-          console.log('No meal plan found, using initial empty structure');
+        // Only load data if user is authenticated (including guest mode)
+        // Without a user, we can't determine whose data to load
+        if (!currentUser) {
+          console.log('⚠️ No user authenticated, skipping data load');
+          setMealPlan(initialMealPlan);
+          setPantryItems([]);
+          setLeftovers([]);
+          setLoading(false);
+          return;
         }
 
-        // Load pantry items
+        console.log(`📊 Loading data for user: ${currentUser.email || currentUser.uid}`);
+
+        // Load meal plan from Firestore (saved at users/{uid}/mealPlans/current)
+        const firestoreMealPlan = await getMealPlan();
+        if (firestoreMealPlan) {
+          console.log('✅ Loaded meal plan from Firestore');
+          setMealPlan(firestoreMealPlan);
+        } else {
+          console.log('📭 No saved meal plan found, starting with empty plan');
+          setMealPlan(initialMealPlan);
+        }
+
+        // Load pantry items from Firestore
         const firestorePantry = await getPantryItems();
-        console.log('Loaded pantry items from Firestore');
+        console.log(`✅ Loaded ${firestorePantry.length} pantry items from Firestore`);
         setPantryItems(firestorePantry);
 
-        // Load leftovers
+        // Load leftovers from Firestore
         const firestoreLeftovers = await getLeftovers();
-        console.log('Loaded', firestoreLeftovers.length, 'leftovers from Firestore');
+        console.log(`✅ Loaded ${firestoreLeftovers.length} leftovers from Firestore`);
         setLeftovers(firestoreLeftovers);
       } catch (error) {
-        console.error('Error loading data from Firestore:', error);
-        // Keep default/empty state on error
+        console.error('❌ Error loading data from Firestore:', error);
+        // Keep default/empty state on error (don't break the app)
+        setMealPlan(initialMealPlan);
+        setPantryItems([]);
+        setLeftovers([]);
       } finally {
         setLoading(false);
       }
     }
 
     loadData();
-  }, []);
+  }, [currentUser]); // Depend on currentUser - reload when user logs in/out
 
   // Auto-save meal plan to Firestore whenever it changes
   useEffect(() => {
