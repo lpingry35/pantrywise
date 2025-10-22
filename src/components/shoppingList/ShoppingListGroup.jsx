@@ -1,5 +1,7 @@
 import AlreadyHaveItem from './AlreadyHaveItem';
 import ShoppingListItem from './ShoppingListItem';
+import FoodCategorySection from './FoodCategorySection';
+import { groupItemsByFoodCategory } from '../../utils/foodCategorizer';
 
 /**
  * ============================================================================
@@ -84,16 +86,20 @@ function ShoppingListGroup({
             </p>
           </div>
 
-          {/* Items List */}
+          {/* Items List - Grouped by Food Category */}
           <div className="p-4">
-            <ul className="space-y-2">
-              {categorizedItems.alreadyHave.map((item) => (
-                <AlreadyHaveItem
-                  key={`${item.name}-${item.quantity}-${item.unit}`}
-                  item={item}
-                />
-              ))}
-            </ul>
+            {groupItemsByFoodCategory(categorizedItems.alreadyHave).map((foodCategory) => (
+              <FoodCategorySection
+                key={foodCategory.categoryName}
+                foodCategory={foodCategory}
+                renderItem={(item) => (
+                  <AlreadyHaveItem
+                    key={`${item.name}-${item.quantity}-${item.unit}`}
+                    item={item}
+                  />
+                )}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -134,21 +140,25 @@ function ShoppingListGroup({
             </p>
           </div>
 
-          {/* Items List - Uses ShoppingListItem (has checkbox) */}
+          {/* Items List - Uses ShoppingListItem (has checkbox), Grouped by Food Category */}
           <div className="p-4">
-            <ul className="space-y-2">
-              {categorizedItems.needMore.map((item) => {
-                const itemKey = `${item.name}-${item.quantity}-${item.unit}`;
-                return (
-                  <ShoppingListItem
-                    key={itemKey}
-                    item={item}
-                    isChecked={checkedItems[itemKey] || false}
-                    onToggle={onToggleItem}
-                  />
-                );
-              })}
-            </ul>
+            {groupItemsByFoodCategory(categorizedItems.needMore).map((foodCategory) => (
+              <FoodCategorySection
+                key={foodCategory.categoryName}
+                foodCategory={foodCategory}
+                renderItem={(item) => {
+                  const itemKey = `${item.name}-${item.quantity}-${item.unit}`;
+                  return (
+                    <ShoppingListItem
+                      key={itemKey}
+                      item={item}
+                      isChecked={checkedItems[itemKey] || false}
+                      onToggle={onToggleItem}
+                    />
+                  );
+                }}
+              />
+            ))}
           </div>
         </div>
       )}
@@ -186,21 +196,25 @@ function ShoppingListGroup({
             </p>
           </div>
 
-          {/* Items List - Uses ShoppingListItem (has checkbox) */}
+          {/* Items List - Uses ShoppingListItem (has checkbox), Grouped by Food Category */}
           <div className="p-4">
-            <ul className="space-y-2">
-              {categorizedItems.needToBuy.map((item) => {
-                const itemKey = `${item.name}-${item.quantity}-${item.unit}`;
-                return (
-                  <ShoppingListItem
-                    key={itemKey}
-                    item={item}
-                    isChecked={checkedItems[itemKey] || false}
-                    onToggle={onToggleItem}
-                  />
-                );
-              })}
-            </ul>
+            {groupItemsByFoodCategory(categorizedItems.needToBuy).map((foodCategory) => (
+              <FoodCategorySection
+                key={foodCategory.categoryName}
+                foodCategory={foodCategory}
+                renderItem={(item) => {
+                  const itemKey = `${item.name}-${item.quantity}-${item.unit}`;
+                  return (
+                    <ShoppingListItem
+                      key={itemKey}
+                      item={item}
+                      isChecked={checkedItems[itemKey] || false}
+                      onToggle={onToggleItem}
+                    />
+                  );
+                }}
+              />
+            ))}
           </div>
         </div>
       )}
