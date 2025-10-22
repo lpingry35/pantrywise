@@ -39,7 +39,7 @@ import EditRecipeModal from '../components/recipeDetail/EditRecipeModal';
  * - RecipeStats: Cook time, servings, cost, ingredient count
  * - RecipeIngredientsList: Ingredients with quantities
  * - RecipeInstructions: Cooking steps
- * - RecipeActions: Action buttons (Add to Plan, Edit)
+ * - RecipeActions: Action buttons (Add to Plan, Edit, Delete with smart checking)
  * - AddToMealPlanModal: Modal for adding to meal plan
  * - EditRecipeModal: Modal for editing recipe
  *
@@ -350,8 +350,9 @@ function RecipeDetail() {
             <RecipeInstructions instructions={recipe.instructions || ''} />
           </div>
 
-          {/* Action Buttons: Add to Meal Plan, Edit Recipe */}
+          {/* Action Buttons: Add to Meal Plan, Edit Recipe, Delete */}
           <RecipeActions
+            recipe={recipe}
             onOpenAddToPlanModal={() => setIsAddToPlanModalOpen(true)}
             onOpenEditModal={() => setIsEditModalOpen(true)}
           />
