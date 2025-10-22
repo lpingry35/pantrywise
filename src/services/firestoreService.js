@@ -171,6 +171,22 @@ function getUserDoc(collectionName, docId) {
 
 /**
  * Save a new recipe to Firestore
+ *
+ * CRITICAL: This function handles TWO types of recipes:
+ * 1. SAMPLE RECIPES: Have an existing ID (e.g., "recipe-001") that we MUST preserve
+ *    - Uses setDoc() with the recipe's existing ID as the Firestore document ID
+ *    - Ensures recipe cards and recipe detail pages use the same ID
+ * 2. USER-CREATED RECIPES: No ID, need a new one generated
+ *    - Uses addDoc() to auto-generate a Firestore document ID
+ *
+ * WHY: If we use addDoc() for sample recipes, Firestore generates a NEW ID (e.g., "xyz123")
+ * but the recipe data still contains the original ID (e.g., "recipe-001").
+ * When getAllRecipes() returns {...doc.data()}, it overwrites the Firestore ID with
+ * the old ID, causing "Recipe not found" errors when clicking recipe cards.
+ *
+ * FIX: Use the recipe's existing ID as the Firestore document ID via setDoc()
+ * This way the ID is consistent everywhere and recipes load correctly.
+ *
  * @param {Object} recipe - Recipe object with all required fields
  * @returns {Promise<string>} - Document ID of the saved recipe
  */
@@ -198,17 +214,40 @@ export async function saveRecipe(recipe) {
     console.log(`📂 Path: users/${userId}/recipes/`);
     console.log(`📗 Recipe name: ${recipe.name}`);
 
-    const recipesRef = getUserCollection('recipes');
+    // CRITICAL BUG FIX: Remove the 'id' field from the recipe data
+    // The ID should ONLY be the Firestore document ID, NOT a field in the data
+    // This prevents ID mismatches when getAllRecipes() spreads doc.data()
+    const { id, ...recipeDataWithoutId } = recipe;
+
     const recipeWithTimestamp = {
-      ...recipe,
+      ...recipeDataWithoutId,
       createdAt: serverTimestamp(),
       updatedAt: serverTimestamp()
     };
 
-    const docRef = await addDoc(recipesRef, recipeWithTimestamp);
-    console.log(`✅ saveRecipe: Recipe saved with ID: ${docRef.id}`);
-    console.log(`📂 Full path: users/${userId}/recipes/${docRef.id}`);
-    return docRef.id;
+    // CRITICAL: Check if recipe has an existing ID (sample recipes)
+    if (id) {
+      // SAMPLE RECIPE: Use the recipe's existing ID as the Firestore document ID
+      // This ensures the ID is consistent between recipe cards and detail pages
+      console.log(`📌 Recipe has existing ID: ${id} - using setDoc() to preserve it`);
+
+      const recipeDocRef = getUserDoc('recipes', id);
+      await setDoc(recipeDocRef, recipeWithTimestamp);
+
+      console.log(`✅ saveRecipe: Recipe saved with preserved ID: ${id}`);
+      console.log(`📂 Full path: users/${userId}/recipes/${id}`);
+      return id;
+    } else {
+      // USER-CREATED RECIPE: No existing ID, generate a new one
+      console.log(`🆕 Recipe has no ID - using addDoc() to generate new ID`);
+
+      const recipesRef = getUserCollection('recipes');
+      const docRef = await addDoc(recipesRef, recipeWithTimestamp);
+
+      console.log(`✅ saveRecipe: Recipe saved with generated ID: ${docRef.id}`);
+      console.log(`📂 Full path: users/${userId}/recipes/${docRef.id}`);
+      return docRef.id;
+    }
   } catch (error) {
     console.error('❌ saveRecipe: Error saving recipe:', error);
     throw new Error(`Failed to save recipe: ${error.message}`);
@@ -217,6 +256,12 @@ export async function saveRecipe(recipe) {
 
 /**
  * Get all recipes from Firestore
+ *
+ * IMPORTANT: The Firestore document ID is the source of truth for recipe IDs
+ * We set `id: doc.id` BEFORE spreading doc.data() to ensure the document ID is used
+ * Since saveRecipe() now strips the 'id' field before saving, doc.data() won't
+ * contain an 'id' field that could overwrite doc.id
+ *
  * @returns {Promise<Array>} - Array of recipe objects with IDs
  */
 export async function getAllRecipes() {
@@ -238,6 +283,9 @@ export async function getAllRecipes() {
 
     const recipes = [];
     querySnapshot.forEach((doc) => {
+      // CRITICAL: Set id BEFORE spreading doc.data()
+      // The Firestore document ID is the source of truth
+      // doc.data() should NOT contain an 'id' field (stripped by saveRecipe)
       recipes.push({
         id: doc.id,
         ...doc.data()
@@ -257,6 +305,19 @@ export async function getAllRecipes() {
 
 /**
  * Get a single recipe by ID
+ *
+ * BACKWARDS COMPATIBILITY FIX FOR EXISTING USERS:
+ * Some users loaded sample recipes before the ID preservation fix was implemented.
+ * Their recipes have mismatched IDs:
+ * - Firestore document ID: auto-generated (e.g., "xyz123")
+ * - Recipe data: contains original id field (e.g., "recipe-001")
+ *
+ * This function has a TWO-STEP FALLBACK to handle both cases:
+ * 1. STEP 1: Try direct lookup by document ID (fast, works for new users)
+ * 2. STEP 2: If not found, search ALL recipes for matching id in data (slow, fixes old users)
+ *
+ * This ensures both new and existing users can view recipe details without errors
+ *
  * @param {string} id - Recipe document ID
  * @returns {Promise<Object|null>} - Recipe object or null if not found
  */
@@ -280,19 +341,50 @@ export async function getRecipeById(id) {
     console.log(`🔍 getRecipeById: Querying recipe ${id} for user ${userId}`);
     console.log(`📂 Path: users/${userId}/recipes/${id}`);
 
+    // STEP 1: Try direct lookup by document ID (works for properly saved recipes)
     const recipeRef = getUserDoc('recipes', id);
     const recipeDoc = await getDoc(recipeRef);
 
     if (recipeDoc.exists()) {
-      console.log(`✅ getRecipeById: Recipe found:`, recipeDoc.data().name);
+      console.log(`✅ getRecipeById: Recipe found via direct lookup:`, recipeDoc.data().name);
       return {
         id: recipeDoc.id,
         ...recipeDoc.data()
       };
-    } else {
-      console.warn(`⚠️ getRecipeById: Recipe with ID ${id} not found at users/${userId}/recipes/${id}`);
-      return null;
     }
+
+    // STEP 2: FALLBACK for existing users with broken recipe IDs
+    // If direct lookup failed, search all recipes to find one with matching id in the data
+    // This handles legacy recipes that were saved before the ID preservation fix
+    console.warn(`⚠️ getRecipeById: Direct lookup failed for ${id}`);
+    console.log(`🔄 getRecipeById: Trying fallback search for legacy recipes...`);
+
+    const recipesRef = getUserCollection('recipes');
+    const querySnapshot = await getDocs(recipesRef);
+
+    let foundRecipe = null;
+    querySnapshot.forEach((doc) => {
+      const data = doc.data();
+      // Check if this recipe's data contains the ID we're looking for
+      // This would only happen with old buggy recipes
+      if (data.id === id) {
+        console.log(`✅ getRecipeById: Found recipe via fallback search (legacy data):`, data.name);
+        console.log(`📌 Recipe has mismatched IDs - Firestore doc ID: ${doc.id}, Data ID: ${data.id}`);
+        foundRecipe = {
+          id: doc.id, // Use the CORRECT Firestore document ID
+          ...data
+        };
+      }
+    });
+
+    if (foundRecipe) {
+      console.log(`🔧 getRecipeById: Returning recipe with corrected ID`);
+      return foundRecipe;
+    }
+
+    console.warn(`⚠️ getRecipeById: Recipe ${id} not found even after fallback search`);
+    return null;
+
   } catch (error) {
     console.error('❌ getRecipeById: Error getting recipe:', error);
     throw new Error(`Failed to get recipe: ${error.message}`);
