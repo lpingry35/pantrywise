@@ -509,8 +509,13 @@ function MealPlannerCalendar() {
                     return (
                       <td key={`${day}-${meal}`} className="p-2 border-r border-gray-200 last:border-r-0">
                         {recipe ? (
-                          // Filled Slot
-                          <div className={`relative group rounded-lg p-2 hover:shadow-md transition-all ${
+                          // ====================================================================
+                          // FILLED SLOT - FIXED HEIGHT FOR CONSISTENT GRID ALIGNMENT
+                          // ====================================================================
+                          // WHY: All slots must be same height (140px) to prevent grid jumping
+                          // BENEFIT: Professional, stable layout regardless of recipe name length
+                          // ====================================================================
+                          <div className={`relative group rounded-lg p-2 hover:shadow-md transition-all h-[140px] min-h-[140px] flex flex-col ${
                             isCooked
                               ? 'bg-green-50 border-2 border-green-500 opacity-90'
                               : 'bg-blue-50 border-2 border-primary'
@@ -524,14 +529,15 @@ function MealPlannerCalendar() {
                               </div>
                             )}
 
-                            <div className="flex gap-2">
+                            <div className="flex gap-2 flex-1">
                               <img
                                 src={recipe.imageUrl}
                                 alt={recipe.name}
                                 className={`w-12 h-12 object-cover rounded flex-shrink-0 ${isCooked ? 'opacity-70' : ''}`}
                               />
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-xs font-semibold text-gray-800 line-clamp-2 mb-1 ${isCooked ? 'line-through opacity-70' : ''}`}>
+                              <div className="flex-1 min-w-0 flex flex-col">
+                                {/* Recipe name with line-clamp-3 for readability (wraps up to 3 lines) */}
+                                <p className={`text-xs font-semibold text-gray-800 line-clamp-3 mb-1 leading-tight ${isCooked ? 'line-through opacity-70' : ''}`}>
                                   {recipe.name}
                                 </p>
                                 <p className={`text-xs font-bold ${isCooked ? 'text-green-600' : 'text-primary'}`}>
@@ -585,10 +591,15 @@ function MealPlannerCalendar() {
                             </div>
                           </div>
                         ) : (
-                          // Empty Slot
+                          // ====================================================================
+                          // EMPTY SLOT - FIXED HEIGHT MATCHES FILLED SLOTS
+                          // ====================================================================
+                          // WHY: Same 140px height as filled slots for consistent grid
+                          // BENEFIT: Grid doesn't jump when adding/removing recipes
+                          // ====================================================================
                           <button
                             onClick={() => openRecipeModal(day, meal)}
-                            className="w-full h-24 border-2 border-dashed border-gray-300 rounded-lg hover:border-primary hover:bg-blue-50 transition-all flex items-center justify-center text-gray-400 hover:text-primary"
+                            className="w-full h-[140px] min-h-[140px] border-2 border-dashed border-gray-300 rounded-lg hover:border-primary hover:bg-blue-50 transition-all flex items-center justify-center text-gray-400 hover:text-primary"
                           >
                             <svg className="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
