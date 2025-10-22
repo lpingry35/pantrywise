@@ -5,7 +5,10 @@ import {
   getPantryItems,
   savePantryItems,
   saveCookingHistory,
-  getCookingHistory
+  getCookingHistory,
+  getLeftovers,
+  addLeftover as addLeftoverToFirestore,
+  removeLeftover as removeLeftoverFromFirestore
 } from '../services/firestoreService';
 import { normalizeIngredient } from '../utils/ingredientMatching';
 import { convertUnit } from '../utils/unitConverter';
@@ -47,6 +50,14 @@ export function MealPlanProvider({ children }) {
   // Includes: cookedCount, ratings, averageRating, firstCookedDate, lastCookedDate
   const [cookingHistoryCache, setCookingHistoryCache] = useState({});
 
+  // ============================================================================
+  // LEFTOVER TRACKING
+  // ============================================================================
+  // Track leftovers to reduce food waste
+  // Each leftover has: { id, recipeName, recipeId, servings, expirationDate, addedDate }
+  // ============================================================================
+  const [leftovers, setLeftovers] = useState([]);
+
   // Load meal plan and pantry from Firestore on mount
   useEffect(() => {
     async function loadData() {
@@ -66,6 +77,11 @@ export function MealPlanProvider({ children }) {
         const firestorePantry = await getPantryItems();
         console.log('Loaded pantry items from Firestore');
         setPantryItems(firestorePantry);
+
+        // Load leftovers
+        const firestoreLeftovers = await getLeftovers();
+        console.log('Loaded', firestoreLeftovers.length, 'leftovers from Firestore');
+        setLeftovers(firestoreLeftovers);
       } catch (error) {
         console.error('Error loading data from Firestore:', error);
         // Keep default/empty state on error
@@ -732,6 +748,62 @@ export function MealPlanProvider({ children }) {
     }
   };
 
+  // ============================================================================
+  // LEFTOVER MANAGEMENT
+  // ============================================================================
+  // WHY: Track leftovers to reduce food waste
+  // WHEN: User marks recipe as cooked and indicates they have leftovers
+  // WHAT: Add leftovers with expiration tracking, remove when used/expired
+  // ============================================================================
+
+  /**
+   * Add a leftover item when cooking a recipe
+   * @param {Object} leftoverData - { recipeName, recipeId, servings, expirationDate }
+   * @returns {Promise<void>}
+   */
+  const addLeftover = async (leftoverData) => {
+    try {
+      console.log('🍱 Adding leftover:', leftoverData.recipeName);
+
+      // Add to Firestore/localStorage
+      const leftoverId = await addLeftoverToFirestore(leftoverData);
+
+      // Update local state
+      const newLeftover = {
+        id: leftoverId,
+        ...leftoverData,
+        addedDate: new Date().toISOString()
+      };
+
+      setLeftovers(prev => [...prev, newLeftover]);
+      console.log('✅ Leftover added successfully');
+    } catch (error) {
+      console.error('❌ Error adding leftover:', error);
+      throw error;
+    }
+  };
+
+  /**
+   * Remove a leftover item
+   * @param {string} leftoverId - ID of the leftover to remove
+   * @returns {Promise<void>}
+   */
+  const removeLeftover = async (leftoverId) => {
+    try {
+      console.log('🗑️ Removing leftover:', leftoverId);
+
+      // Remove from Firestore/localStorage
+      await removeLeftoverFromFirestore(leftoverId);
+
+      // Update local state
+      setLeftovers(prev => prev.filter(item => item.id !== leftoverId));
+      console.log('✅ Leftover removed successfully');
+    } catch (error) {
+      console.error('❌ Error removing leftover:', error);
+      throw error;
+    }
+  };
+
   const value = {
     mealPlan,
     setMealPlan,
@@ -754,7 +826,11 @@ export function MealPlanProvider({ children }) {
     unmarkRecipeAsCooked,
     // Phase 7.5.2 - Cooking History with Ratings
     cookingHistoryCache,
-    getRecipeCookingHistory
+    getRecipeCookingHistory,
+    // Leftover Tracking (Food waste reduction)
+    leftovers,
+    addLeftover,
+    removeLeftover
   };
 
   return (

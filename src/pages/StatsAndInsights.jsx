@@ -18,8 +18,9 @@ function StatsAndInsights() {
   // WHY: All data is already loaded in MealPlanContext
   // WHAT: cookingHistoryCache has all cooking data with ratings
   // WHERE: This data comes from Firestore users/{userId}/cookingHistory
+  // NEW: leftovers for food waste tracking
   // ============================================================================
-  const { pantryItems, cookingHistoryCache } = useMealPlan();
+  const { pantryItems, cookingHistoryCache, leftovers } = useMealPlan();
 
   // State for recipes (need to load separately)
   const [recipes, setRecipes] = useState([]);
@@ -75,6 +76,15 @@ function StatsAndInsights() {
 
   // PANTRY STATS
   const totalPantryItems = pantryItems.length;
+
+  // LEFTOVER STATS
+  const totalLeftovers = leftovers.length;
+  const expiringLeftovers = leftovers.filter(item => {
+    const daysUntilExpiration = Math.ceil(
+      (new Date(item.expirationDate) - new Date()) / (1000 * 60 * 60 * 24)
+    );
+    return daysUntilExpiration <= 2 && daysUntilExpiration >= 0;
+  });
 
   // Check if user has ANY data at all
   const hasAnyData = totalRecipes > 0 || totalRecipesCooked > 0 || totalPantryItems > 0;
@@ -201,7 +211,59 @@ function StatsAndInsights() {
           </div>
 
           {/* ===============================================================
-              CARD 4: COMING SOON
+              CARD 4: LEFTOVERS
+              ===============================================================
+              SHOWS: Leftover tracking for food waste reduction
+              SOURCE: leftovers from MealPlanContext
+              WARNING: Shows expiring items count
+          */}
+          {totalLeftovers > 0 ? (
+            <div className="bg-gradient-to-br from-orange-500 to-red-600 rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                🍱 Leftovers
+              </h3>
+              <p className="text-5xl font-bold mb-2">{totalLeftovers}</p>
+              <p className="text-orange-100 mb-4">
+                {totalLeftovers === 1 ? 'Item' : 'Items'} in your fridge
+              </p>
+
+              {/* Show expiring items warning */}
+              {expiringLeftovers.length > 0 && (
+                <div className="bg-red-700 bg-opacity-30 rounded p-3 mb-4">
+                  <p className="text-sm font-semibold">⚠️ {expiringLeftovers.length} expiring soon!</p>
+                </div>
+              )}
+
+              {/* List all leftovers */}
+              <div className="mt-4 space-y-2 max-h-48 overflow-y-auto">
+                {leftovers.map(item => {
+                  const daysUntilExpiration = Math.ceil(
+                    (new Date(item.expirationDate) - new Date()) / (1000 * 60 * 60 * 24)
+                  );
+                  return (
+                    <div key={item.id} className="text-sm bg-white bg-opacity-20 rounded p-2">
+                      <p className="font-semibold">{item.recipeName}</p>
+                      <p className="text-orange-100">
+                        {item.servings} servings • Expires in {daysUntilExpiration} day{daysUntilExpiration !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : (
+            <div className="bg-gradient-to-br from-orange-300 to-orange-400 rounded-xl p-6 text-white shadow-lg">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+                🍱 Leftovers
+              </h3>
+              <p className="text-orange-100">
+                No leftovers tracked yet. Mark leftovers when you cook to reduce food waste!
+              </p>
+            </div>
+          )}
+
+          {/* ===============================================================
+              CARD 5: COMING SOON
               ===============================================================
               SHOWS: Placeholder for future features
               PURPOSE: Set expectations for upcoming enhancements
@@ -214,10 +276,6 @@ function StatsAndInsights() {
             <ul className="text-sm text-gray-200 space-y-2">
               <li className="flex items-start gap-2">
                 <span>•</span>
-                <span>Leftover tracking & waste reduction</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span>•</span>
                 <span>Cost savings analysis</span>
               </li>
               <li className="flex items-start gap-2">
@@ -227,6 +285,10 @@ function StatsAndInsights() {
               <li className="flex items-start gap-2">
                 <span>•</span>
                 <span>Meal planning trends</span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span>•</span>
+                <span>Advanced waste tracking</span>
               </li>
             </ul>
           </div>

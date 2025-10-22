@@ -865,6 +865,149 @@ export async function getAllCookingHistory() {
 }
 
 // ============================================================================
+// LEFTOVER TRACKING
+// ============================================================================
+// WHY: Track leftovers to reduce food waste
+// WHAT: Users can add leftovers when cooking and track expiration dates
+// WHERE: Stored in users/{userId}/leftovers collection in Firestore
+// ============================================================================
+
+/**
+ * Get guest leftovers from localStorage
+ * @returns {Array} - Array of leftover objects
+ */
+function getGuestLeftovers() {
+  const stored = localStorage.getItem('guestLeftovers');
+  if (stored) {
+    return JSON.parse(stored);
+  }
+  return [];
+}
+
+/**
+ * Save guest leftovers to localStorage
+ * @param {Array} leftovers - Array of leftover objects
+ */
+function setGuestLeftovers(leftovers) {
+  localStorage.setItem('guestLeftovers', JSON.stringify(leftovers));
+}
+
+/**
+ * Add a leftover item to track food waste
+ * @param {Object} leftoverData - Leftover data { recipeName, recipeId, servings, expirationDate }
+ * @returns {Promise<string>} - ID of the created leftover
+ */
+export async function addLeftover(leftoverData) {
+  try {
+    const now = new Date().toISOString();
+
+    // Guest mode: save to localStorage
+    if (isGuestMode()) {
+      const leftovers = getGuestLeftovers();
+      const newLeftover = {
+        id: `leftover_${Date.now()}`,
+        ...leftoverData,
+        addedDate: now
+      };
+      leftovers.push(newLeftover);
+      setGuestLeftovers(leftovers);
+      console.log('✅ Leftover added to guest storage');
+      return newLeftover.id;
+    }
+
+    // Regular user: save to Firestore
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('User must be logged in to add leftovers');
+    }
+
+    const leftoverRef = doc(collection(db, `users/${user.uid}/leftovers`));
+    const leftover = {
+      id: leftoverRef.id,
+      ...leftoverData,
+      addedDate: now,
+      userId: user.uid
+    };
+
+    await setDoc(leftoverRef, leftover);
+    console.log('✅ Leftover added to Firestore:', leftover.recipeName);
+    return leftoverRef.id;
+  } catch (error) {
+    console.error('Error adding leftover:', error);
+    throw new Error(`Failed to add leftover: ${error.message}`);
+  }
+}
+
+/**
+ * Remove a leftover item
+ * @param {string} leftoverId - ID of the leftover to remove
+ * @returns {Promise<void>}
+ */
+export async function removeLeftover(leftoverId) {
+  try {
+    // Guest mode: remove from localStorage
+    if (isGuestMode()) {
+      const leftovers = getGuestLeftovers();
+      const filtered = leftovers.filter(item => item.id !== leftoverId);
+      setGuestLeftovers(filtered);
+      console.log('✅ Leftover removed from guest storage');
+      return;
+    }
+
+    // Regular user: remove from Firestore
+    const user = auth.currentUser;
+    if (!user) {
+      throw new Error('User must be logged in to remove leftovers');
+    }
+
+    await deleteDoc(doc(db, `users/${user.uid}/leftovers`, leftoverId));
+    console.log('✅ Leftover removed from Firestore');
+  } catch (error) {
+    console.error('Error removing leftover:', error);
+    throw new Error(`Failed to remove leftover: ${error.message}`);
+  }
+}
+
+/**
+ * Get all leftovers for current user
+ * @returns {Promise<Array>} - Array of leftover objects
+ */
+export async function getLeftovers() {
+  try {
+    // Guest mode: get from localStorage
+    if (isGuestMode()) {
+      const leftovers = getGuestLeftovers();
+      console.log('Retrieved', leftovers.length, 'leftovers from guest storage');
+      return leftovers;
+    }
+
+    // Regular user: get from Firestore
+    const user = auth.currentUser;
+    if (!user) {
+      console.log('No user logged in, returning empty leftovers array');
+      return [];
+    }
+
+    const leftoversRef = collection(db, `users/${user.uid}/leftovers`);
+    const snapshot = await getDocs(leftoversRef);
+
+    const leftovers = [];
+    snapshot.forEach((doc) => {
+      leftovers.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    console.log('Retrieved', leftovers.length, 'leftovers from Firestore');
+    return leftovers;
+  } catch (error) {
+    console.error('Error getting leftovers:', error);
+    throw new Error(`Failed to get leftovers: ${error.message}`);
+  }
+}
+
+// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
@@ -915,7 +1058,12 @@ const firestoreService = {
   getAllCookingHistory,
 
   // Utilities
-  testFirestoreConnection
+  testFirestoreConnection,
+
+  // Leftovers (Food waste tracking)
+  addLeftover,
+  removeLeftover,
+  getLeftovers
 };
 
 export default firestoreService;

@@ -2,16 +2,51 @@ import { useMealPlan } from '../context/MealPlanContext';
 import MealPlannerCalendar from '../components/MealPlannerCalendar';
 import SavedMealPlansManager from '../components/SavedMealPlansManager';
 import { analyzeSharedIngredients } from '../utils/sharedIngredientsAnalyzer';
-// Import Calendar icon for Meal Planner page header
-import { Calendar } from 'lucide-react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+// Import Calendar icon for Meal Planner page header, and icons for leftover widget
+import { Calendar, ChevronDown, ChevronRight, Trash2 } from 'lucide-react';
 
 function MealPlanner() {
-  const { mealPlan } = useMealPlan();
+  const { mealPlan, leftovers, removeLeftover } = useMealPlan();
+  const navigate = useNavigate();
+
+  // ============================================================================
+  // LEFTOVER WIDGET STATE
+  // ============================================================================
+  // WHY: Remember user's preference for widget expanded/collapsed
+  // WHERE: Stored in localStorage to persist across sessions
+  // DEFAULT: Collapsed (false) to keep interface clean
+  // ============================================================================
+  const [isLeftoverWidgetExpanded, setIsLeftoverWidgetExpanded] = useState(
+    () => localStorage.getItem('leftoverWidgetExpanded') === 'true'
+  );
+
+  // Toggle widget and save preference
+  const toggleWidget = () => {
+    const newState = !isLeftoverWidgetExpanded;
+    setIsLeftoverWidgetExpanded(newState);
+    localStorage.setItem('leftoverWidgetExpanded', newState.toString());
+  };
 
   // Analyze shared ingredients
   const sharedData = analyzeSharedIngredients(mealPlan);
   const hasRecipes = sharedData.totalRecipes > 0;
   const hasSharedIngredients = sharedData.totalSharedIngredients > 0;
+
+  // ============================================================================
+  // CALCULATE EXPIRING LEFTOVERS
+  // ============================================================================
+  // WHY: Warn users about leftovers expiring soon (within 2 days)
+  // HOW: Calculate days until expiration for each leftover
+  // SHOW: Red warning badge if any leftovers expire within 2 days
+  // ============================================================================
+  const expiringLeftovers = leftovers.filter(item => {
+    const daysUntilExpiration = Math.ceil(
+      (new Date(item.expirationDate) - new Date()) / (1000 * 60 * 60 * 24)
+    );
+    return daysUntilExpiration <= 2 && daysUntilExpiration >= 0;
+  });
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -145,6 +180,89 @@ function MealPlanner() {
       <div className="mb-6">
         <SavedMealPlansManager showOnlySection="save" />
       </div>
+
+      {/* ====================================================================
+          LEFTOVER TRACKING WIDGET (Collapsible)
+          ====================================================================
+          WHY: Track leftovers to reduce food waste
+          WHEN: Only shown if user has at least 1 leftover
+          HOW: Collapsed by default, expands to show all leftovers
+          WARNING: Shows red badge if items expire within 2 days
+          ==================================================================== */}
+      {leftovers.length > 0 && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 rounded-lg overflow-hidden">
+          {/* Header - Always visible, clickable to expand/collapse */}
+          <div
+            className="p-4 cursor-pointer hover:bg-blue-100 transition-colors flex items-center justify-between"
+            onClick={toggleWidget}
+          >
+            <div className="flex items-center gap-3">
+              {isLeftoverWidgetExpanded ? (
+                <ChevronDown className="w-5 h-5 text-blue-600" />
+              ) : (
+                <ChevronRight className="w-5 h-5 text-blue-600" />
+              )}
+              <span className="font-semibold text-gray-700">🍱 Leftovers</span>
+              {expiringLeftovers.length > 0 && (
+                <span className="text-red-500 font-semibold flex items-center gap-1">
+                  ⚠️ {expiringLeftovers.length} expiring soon
+                </span>
+              )}
+              <span className="text-sm text-gray-500">({leftovers.length} items)</span>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate('/stats');
+              }}
+              className="text-sm text-blue-600 hover:underline"
+            >
+              View All →
+            </button>
+          </div>
+
+          {/* Expanded content - Show all leftovers */}
+          {isLeftoverWidgetExpanded && (
+            <div className="p-4 pt-0 grid grid-cols-1 md:grid-cols-2 gap-3">
+              {leftovers.map(item => {
+                const daysUntilExpiration = Math.ceil(
+                  (new Date(item.expirationDate) - new Date()) / (1000 * 60 * 60 * 24)
+                );
+                const isExpiringSoon = daysUntilExpiration <= 2;
+
+                return (
+                  <div
+                    key={item.id}
+                    className={`bg-white p-3 rounded border ${
+                      isExpiringSoon ? 'border-red-300 bg-red-50' : 'border-gray-200'
+                    }`}
+                  >
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-800">{item.recipeName}</p>
+                        <p className="text-sm text-gray-600">{item.servings} servings left</p>
+                        <p className={`text-sm ${isExpiringSoon ? 'text-red-600 font-semibold' : 'text-gray-500'}`}>
+                          {daysUntilExpiration === 0 && 'Expires today!'}
+                          {daysUntilExpiration === 1 && 'Expires tomorrow'}
+                          {daysUntilExpiration > 1 && `Expires in ${daysUntilExpiration} days`}
+                          {daysUntilExpiration < 0 && 'Expired!'}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => removeLeftover(item.id)}
+                        className="text-red-500 hover:text-red-700"
+                        title="Remove leftover"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      )}
 
       <MealPlannerCalendar />
 

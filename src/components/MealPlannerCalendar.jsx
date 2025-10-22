@@ -20,7 +20,8 @@ function MealPlannerCalendar() {
     markRecipeAsCooked,
     unmarkRecipeAsCooked,
     getRecipeCookingHistory,
-    cookingHistoryCache
+    cookingHistoryCache,
+    addLeftover
   } = useMealPlan();
 
   const [modalOpen, setModalOpen] = useState(false);
@@ -182,14 +183,15 @@ function MealPlannerCalendar() {
   };
 
   /**
-   * Confirms cooking with rating and notes
+   * Confirms cooking with rating, notes, and leftover tracking
    * Called from CookingModal when user submits
    * BUG FIX #7: This is where ACTUAL deduction happens (checkOnly = false)
+   * NEW: Adds leftover tracking for food waste reduction
    */
-  const handleConfirmCooking = async (rating, notes) => {
+  const handleConfirmCooking = async (rating, notes, hasLeftovers, leftoverServings) => {
     if (!cookingSlot) return;
 
-    const { day, meal } = cookingSlot;
+    const { day, meal, recipe } = cookingSlot;
     console.log('✅ User confirmed cooking. Now ACTUALLY deducting ingredients...');
 
     try {
@@ -203,10 +205,36 @@ function MealPlannerCalendar() {
       console.log('🎯 Cooking result:', result);
 
       if (result.success) {
+        // ====================================================================
+        // ADD LEFTOVER IF USER INDICATED THEY HAVE LEFTOVERS
+        // ====================================================================
+        if (hasLeftovers && leftoverServings > 0) {
+          console.log('🍱 Adding leftover:', recipe.name, leftoverServings, 'servings');
+          try {
+            const expirationDate = new Date();
+            expirationDate.setDate(expirationDate.getDate() + 3); // 3 days from now
+
+            await addLeftover({
+              recipeName: recipe.name,
+              recipeId: recipe.id,
+              servings: leftoverServings,
+              expirationDate: expirationDate.toISOString()
+            });
+
+            console.log('✅ Leftover added successfully!');
+          } catch (error) {
+            console.error('❌ Error adding leftover:', error);
+            // Don't fail the whole operation if leftover addition fails
+          }
+        }
+
         // Show success message with rating
         let message = result.message;
         if (result.rating) {
           message += ` You rated it ${result.rating} star${result.rating !== 1 ? 's' : ''}!`;
+        }
+        if (hasLeftovers) {
+          message += ` 🍱 Leftover tracked!`;
         }
         console.log('🎉 Cooking successful! Message:', message);
         showCookingMessage('success', message);

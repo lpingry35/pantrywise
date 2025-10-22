@@ -30,6 +30,16 @@ function CookingModal({
   // State for expanding/collapsing insufficient ingredients list
   const [showAllInsufficientItems, setShowAllInsufficientItems] = useState(false);
 
+  // ============================================================================
+  // LEFTOVER TRACKING STATE
+  // ============================================================================
+  // WHY: Track leftovers to reduce food waste
+  // WHEN: User checks the "Do you have leftovers?" box after cooking
+  // WHAT: Stores whether they have leftovers and how many servings
+  // ============================================================================
+  const [hasLeftovers, setHasLeftovers] = useState(false);
+  const [leftoverServings, setLeftoverServings] = useState(1);
+
   // Determine if this is first cook
   const isFirstCook = !cookingHistory || cookingHistory.cookedCount === 0;
 
@@ -54,6 +64,8 @@ function CookingModal({
       setNotes('');
       setIsSubmitting(false);
       setShowAllInsufficientItems(false);
+      setHasLeftovers(false);
+      setLeftoverServings(1);
     }
   }, [isOpen]);
 
@@ -68,8 +80,8 @@ function CookingModal({
     setIsSubmitting(true);
 
     try {
-      // Call the confirm handler with rating and notes
-      await onConfirm(rating, notes);
+      // Call the confirm handler with rating, notes, and leftover data
+      await onConfirm(rating, notes, hasLeftovers, leftoverServings);
     } catch (error) {
       console.error('Error in cooking submission:', error);
       setIsSubmitting(false);
@@ -188,6 +200,48 @@ function CookingModal({
               rows={3}
               className="w-full px-4 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 resize-none"
             />
+          </div>
+
+          {/* ====================================================================
+              LEFTOVER TRACKING SECTION
+              ====================================================================
+              WHY: Track leftovers to reduce food waste
+              WHAT: Ask user if they have leftovers and how many servings
+              WHERE: Saves to users/{userId}/leftovers in Firestore
+              WHEN: After cooking, leftovers expire in 3 days by default
+              ==================================================================== */}
+          <div className="mb-6 p-4 bg-blue-50 border-2 border-blue-200 rounded-lg">
+            <label className="flex items-center gap-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={hasLeftovers}
+                onChange={(e) => setHasLeftovers(e.target.checked)}
+                className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500 cursor-pointer"
+              />
+              <span className="text-sm font-semibold text-gray-800 flex items-center gap-2">
+                🍱 Do you have leftovers?
+              </span>
+            </label>
+
+            {/* Servings input - only show when hasLeftovers is checked */}
+            {hasLeftovers && (
+              <div className="mt-4 ml-8">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  How many servings left?
+                </label>
+                <input
+                  type="number"
+                  min="1"
+                  max="20"
+                  value={leftoverServings}
+                  onChange={(e) => setLeftoverServings(parseInt(e.target.value) || 1)}
+                  className="w-32 px-3 py-2 border-2 border-blue-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  📅 Will expire in 3 days (you can remove it earlier if needed)
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Insufficient Ingredients Warning */}
