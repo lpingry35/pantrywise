@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { X } from 'lucide-react';
+import { UNIT_OPTIONS_JSX } from '../../constants/units';
 
 /**
  * ============================================================================
@@ -42,18 +43,8 @@ function AddManualItemModal({ isOpen, onClose, onAdd }) {
     'Other'
   ];
 
-  // Common units for dropdown
-  const units = [
-    'unit', 'units',
-    'lb', 'lbs', 'oz',
-    'cup', 'cups', 'tbsp', 'tsp',
-    'bottle', 'bottles',
-    'box', 'boxes',
-    'bag', 'bags',
-    'can', 'cans',
-    'jar', 'jars',
-    'pack', 'packs'
-  ];
+  // Note: Unit options are imported from shared constants file
+  // This ensures consistency across all components
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -147,11 +138,9 @@ function AddManualItemModal({ isOpen, onClose, onAdd }) {
               <select
                 value={unit}
                 onChange={(e) => setUnit(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent appearance-none cursor-pointer bg-white"
               >
-                {units.map(u => (
-                  <option key={u} value={u}>{u}</option>
-                ))}
+                {UNIT_OPTIONS_JSX}
               </select>
             </div>
           </div>

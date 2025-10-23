@@ -22,7 +22,16 @@
       "Bash(git branch -M main)",
       "Bash(git commit -m \"Initial commit - PantryWise Smart Meal Planner\n\n✨ Features:\n- User authentication (Firebase Auth with guest mode)\n- Recipe library with URL import from cooking websites\n- Meal planning calendar (21 slots per week)\n- Smart shopping list with pantry comparison\n- Pantry tracking and ingredient matching\n- Saved meal plans feature\n- Cooking history with star ratings\n- Recipe scraping Firebase Cloud Function\n\n🐛 Bug fixes:\n- Fixed new user empty states for all pages\n- Enhanced empty state UI with gradient cards\n- Fixed recipe loading from user-scoped Firestore\n\n🎨 Design:\n- Modern gradient cards for empty states\n- Responsive layout with Tailwind CSS\n- Lucide React icons throughout\n\n🔐 Security:\n- Environment variables protected with .gitignore\n- User-scoped Firestore security rules\n- Firebase authentication integration\")",
       "Bash(git remote add origin https://github.com/lpingry35/pantrywise.git)",
-      "Bash(git push -u origin main)"
+      "Bash(git push -u origin main)",
+      "Bash(git add src/pages/StatsAndInsights.jsx src/App.js src/components/Navigation.jsx)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nFeature: Add Stats & Insights page\n\n- Created StatsAndInsights.jsx with simple kitchen statistics\n- Shows recipe count, cooking history, pantry count\n- Displays highest rated and most cooked recipes\n- Added navigation link with BarChart3 icon\n- Added route to App.js\n- Includes empty state for new users\n- All data from MealPlanContext and Firestore\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(git add src/components/Navigation.jsx src/pages/StatsAndInsights.jsx)",
+      "Bash(git commit -m \"Update: Rename ''Stats & Insights'' to ''Insights''\")",
+      "Bash(git push)",
+      "Bash(git add src/components/MealPlannerCalendar.jsx src/pages/MealPlanner.jsx)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nUI Improvement: Move Save Plan into My Meal Plan Card\n\nWHAT CHANGED:\n- Removed standalone purple \"Save Current Plan\" box\n- Integrated save plan UI into bottom of \"My Meal Plan\" card\n- Cleaner, less cluttered interface\n\nTECHNICAL CHANGES:\n1. MealPlannerCalendar.jsx:\n   - Added imports: saveNamedMealPlan, Save icon\n   - Added state: planName, savingPlan\n   - Added handleSavePlan function\n   - Added save plan UI section inside My Meal Plan banner\n   - Styled with white/transparent theme to match blue gradient\n\n2. MealPlanner.jsx:\n   - Removed <SavedMealPlansManager showOnlySection=\"save\" />\n   - Cleaner page layout without duplicate save UI\n\nDESIGN:\n- Input: Semi-transparent white bg with blue placeholder text\n- Button: White background with blue text (stands out on gradient)\n- Border-top separator between stats and save section\n- Save icon + \"Save This Plan\" header\n- Recipe count shown below input\n\nBENEFITS:\n- Single cohesive meal plan card\n- Less visual clutter\n- Save functionality always visible with plan stats\n- No separate purple box taking up space\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")",
+      "Bash(mkdir:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

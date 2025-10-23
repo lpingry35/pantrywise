@@ -4,6 +4,8 @@ import { useMealPlan } from '../context/MealPlanContext';
 import { Package } from 'lucide-react';
 // Import formatQuantity for clean display of can units
 import { formatQuantity } from '../utils/unitConverter';
+// Import shared unit options for consistent dropdowns across app
+import { UNIT_OPTIONS_JSX } from '../constants/units';
 
 function MyPantry() {
   const { pantryItems, addPantryItem, updatePantryItem, removePantryItem, clearPantry } = useMealPlan();
@@ -26,10 +28,8 @@ function MyPantry() {
   const [editQuantity, setEditQuantity] = useState('');
   const [editUnit, setEditUnit] = useState('cup');
 
-  const commonUnits = [
-    'cup', 'tbsp', 'tsp', 'oz', 'lb', 'g', 'kg', 'ml', 'l',
-    'piece', 'whole', 'clove', 'can', 'package'
-  ];
+  // Note: Unit options are imported from shared constants file (src/constants/units.js)
+  // This ensures consistency across Shopping List and Pantry dropdowns
 
   // Handle adding new ingredient
   const handleAddIngredient = (e) => {
@@ -237,11 +237,9 @@ function MyPantry() {
                 <select
                   value={unit}
                   onChange={(e) => setUnit(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-primary focus:border-transparent appearance-none cursor-pointer bg-white"
                 >
-                  {commonUnits.map(u => (
-                    <option key={u} value={u}>{u}</option>
-                  ))}
+                  {UNIT_OPTIONS_JSX}
                 </select>
               </div>
             </div>
@@ -484,11 +482,9 @@ function MyPantry() {
                     <select
                       value={editUnit}
                       onChange={(e) => setEditUnit(e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      className="w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent appearance-none cursor-pointer bg-white"
                     >
-                      {commonUnits.map(u => (
-                        <option key={u} value={u}>{u}</option>
-                      ))}
+                      {UNIT_OPTIONS_JSX}
                     </select>
                   </div>
                 </div>

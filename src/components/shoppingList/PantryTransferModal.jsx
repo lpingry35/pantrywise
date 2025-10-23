@@ -1,3 +1,6 @@
+import PackageSizeSelector from './PackageSizeSelector';
+import { UNIT_OPTIONS_JSX } from '../../constants/units';
+
 /**
  * ============================================================================
  * PANTRY TRANSFER MODAL COMPONENT
@@ -16,6 +19,7 @@
  * 1. User clicks "Transfer to Pantry" button
  * 2. Modal opens with all items pre-filled with recipe amounts
  * 3. User can:
+ *    - QUICK SELECT common package sizes (NEW!)
  *    - Edit quantities to match package sizes
  *    - Edit units if needed
  *    - Skip items they didn't buy (checkbox)
@@ -26,6 +30,7 @@
  * 7. Shopping list items recategorize to "Already Have" section
  *
  * FEATURES:
+ * - Quick-select package size buttons (eggs: 6/12/18, oil: 8oz/16oz/32oz)
  * - Pre-filled with recipe amounts (can be overridden)
  * - Skip checkbox for items not purchased
  * - "Reset All to Recipe Amounts" quick action
@@ -54,6 +59,18 @@ function PantryTransferModal({
   onTransfer,
   transferring
 }) {
+  /**
+   * Handler for quick-select package size buttons
+   * Updates both quantity and unit when user clicks a package size button
+   */
+  const handleQuickSelect = (itemId, quantity, unit) => {
+    console.log(`⚡ Quick select triggered: ${quantity} ${unit} for item ${itemId}`);
+
+    // Update both purchasedQuantity and purchasedUnit
+    onUpdateItem(itemId, 'purchasedQuantity', quantity.toString());
+    onUpdateItem(itemId, 'purchasedUnit', unit);
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -173,23 +190,20 @@ function PantryTransferModal({
                     {/* Item Name */}
                     <h4 className="font-bold text-gray-900 capitalize mb-2">{item.name}</h4>
 
-                    {/* Recipe Needed (Read-only info) */}
-                    <div className="text-sm text-gray-600 mb-3 flex items-center gap-2">
-                      <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      <span>
-                        Recipe needed:{' '}
-                        <span className="font-semibold">
-                          {item.recipeQuantity} {item.recipeUnit}
-                        </span>
-                      </span>
-                    </div>
+                    {/* ==========================================================
+                        PACKAGE SIZE SELECTOR (QUICK SELECT)
+                        ==========================================================
+                        Shows common package sizes based on ingredient type
+                        Allows user to click a button instead of typing
+                    */}
+                    {!item.skip && (
+                      <PackageSizeSelector
+                        category={item.category || 'Other'}
+                        ingredientName={item.name}
+                        recipeAmount={`${item.recipeQuantity} ${item.recipeUnit}`}
+                        onSelect={(quantity, unit) => handleQuickSelect(item.id, quantity, unit)}
+                      />
+                    )}
 
                     {/* ==========================================================
                         EDITABLE INPUTS FOR PURCHASED AMOUNT
@@ -216,19 +230,19 @@ function PantryTransferModal({
                         />
                       </div>
 
-                      {/* Unit Input */}
+                      {/* Unit Dropdown - Ensures consistent unit values */}
                       <div>
                         <label className="block text-xs font-medium text-gray-700 mb-1">
                           Unit
                         </label>
-                        <input
-                          type="text"
+                        <select
                           value={item.purchasedUnit}
                           onChange={(e) => onUpdateItem(item.id, 'purchasedUnit', e.target.value)}
                           disabled={item.skip}
-                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:text-gray-500"
-                          placeholder="e.g., cups, oz, lbs"
-                        />
+                          className="w-full px-3 py-2 border-2 border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 disabled:bg-gray-100 disabled:text-gray-500 appearance-none cursor-pointer bg-white"
+                        >
+                          {UNIT_OPTIONS_JSX}
+                        </select>
                       </div>
                     </div>
 
