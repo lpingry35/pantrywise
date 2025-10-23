@@ -1466,6 +1466,38 @@ export async function clearShoppingList() {
   }
 }
 
+/**
+ * Add a manually-entered item to the shopping list
+ * These items are not from recipes - they're things like paper towels, cleaning supplies, etc.
+ *
+ * @param {Object} item - Item object with { id, name, quantity, unit, category, source: 'manual', ... }
+ * @returns {Promise<void>}
+ */
+export async function addManualItemToShoppingList(item) {
+  console.log('➕ Adding manual item to shopping list:', item.name);
+
+  try {
+    // Guest mode: add to localStorage
+    if (isGuestMode()) {
+      const stored = localStorage.getItem('guestShoppingList');
+      const currentList = stored ? JSON.parse(stored) : [];
+      currentList.push(item);
+      localStorage.setItem('guestShoppingList', JSON.stringify(currentList));
+      console.log('👤 addManualItemToShoppingList: Guest mode - added item:', item.name);
+      return;
+    }
+
+    // Regular user: add to Firestore
+    const itemRef = getUserDoc('currentShoppingList', item.id);
+    await setDoc(itemRef, item);
+
+    console.log('✅ Manual item added successfully:', item.name);
+  } catch (error) {
+    console.error('❌ Failed to add manual item:', error);
+    throw new Error(`Failed to add manual item: ${error.message}`);
+  }
+}
+
 // ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================

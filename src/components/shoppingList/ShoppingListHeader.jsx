@@ -1,4 +1,4 @@
-import { RefreshCw, Trash2 } from 'lucide-react';
+import { RefreshCw, Trash2, Plus } from 'lucide-react';
 
 /**
  * ============================================================================
@@ -34,6 +34,7 @@ import { RefreshCw, Trash2 } from 'lucide-react';
  * @param {boolean} generating - Whether generation is in progress
  * @param {function} onClear - Function to clear shopping list
  * @param {boolean} hasItems - Whether shopping list has any items
+ * @param {function} onAddManualItem - Function to open add manual item modal
  */
 
 function ShoppingListHeader({
@@ -48,7 +49,8 @@ function ShoppingListHeader({
   onGenerate,
   generating,
   onClear,
-  hasItems
+  hasItems,
+  onAddManualItem
 }) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -100,13 +102,14 @@ function ShoppingListHeader({
         )}
 
         {/* =================================================================
-            GENERATE & CLEAR BUTTONS ROW
+            GENERATE, ADD, & CLEAR BUTTONS ROW
             =================================================================
             Shopping list management actions:
-            1. Generate from Meal Plan - Creates new shopping list
-            2. Clear Shopping List - Removes all items
+            1. Generate from Meal Plan - Creates new shopping list from recipes
+            2. Add Item - Manually add non-recipe items
+            3. Clear Shopping List - Removes all items
         */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 mb-3">
 
           {/* ===============================================================
               GENERATE FROM MEAL PLAN BUTTON
@@ -120,6 +123,19 @@ function ShoppingListHeader({
           >
             <RefreshCw className={`w-5 h-5 ${generating ? 'animate-spin' : ''}`} />
             {generating ? 'Generating...' : 'Generate from Meal Plan'}
+          </button>
+
+          {/* ===============================================================
+              ADD MANUAL ITEM BUTTON
+              ===============================================================
+              Opens modal to add items not from recipes (paper towels, etc.)
+          */}
+          <button
+            onClick={onAddManualItem}
+            className="bg-gradient-to-r from-green-600 to-green-700 text-white py-3 px-4 rounded-lg hover:from-green-700 hover:to-green-800 transition-all font-bold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Add Item
           </button>
 
           {/* ===============================================================

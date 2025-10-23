@@ -8,7 +8,8 @@ import {
   saveShoppingListItems,
   clearShoppingList,
   transferItemsToPantry,
-  getPantryItems
+  getPantryItems,
+  addManualItemToShoppingList
 } from '../services/firestoreService';
 import { ShoppingCart, Trash2 } from 'lucide-react';
 
@@ -17,6 +18,7 @@ import ShoppingListStats from '../components/shoppingList/ShoppingListStats';
 import ShoppingListHeader from '../components/shoppingList/ShoppingListHeader';
 import ShoppingListGroup from '../components/shoppingList/ShoppingListGroup';
 import PantryTransferModal from '../components/shoppingList/PantryTransferModal';
+import AddManualItemModal from '../components/shoppingList/AddManualItemModal';
 
 /**
  * ============================================================================
@@ -82,6 +84,9 @@ function ShoppingListPage() {
   const [showTransferConfirm, setShowTransferConfirm] = useState(false);
   const [editableItems, setEditableItems] = useState([]);
   const [transferring, setTransferring] = useState(false);
+
+  // Add manual item modal state
+  const [showAddItemModal, setShowAddItemModal] = useState(false);
 
   // Success/error message state
   const [transferMessage, setTransferMessage] = useState({ type: '', text: '' });
@@ -167,21 +172,29 @@ function ShoppingListPage() {
 
   /**
    * Generates shopping list from current meal plan and saves to Firestore
+   * PRESERVES MANUAL ITEMS - Manual items (paper towels, etc.) are kept when regenerating
    */
   const handleGenerateFromMealPlan = async () => {
     try {
       setGenerating(true);
       console.log('🛒 Generating shopping list from meal plan...');
 
-      // Generate shopping list from meal plan (computes what's needed)
+      // STEP 1: Get current shopping list to preserve manual items
+      const currentList = await getShoppingListItems();
+
+      // STEP 2: Filter out ONLY manual items (keep non-recipe items)
+      const manualItems = currentList.filter(item => item.source === 'manual');
+      console.log(`📝 Preserving ${manualItems.length} manual items`);
+
+      // STEP 3: Generate shopping list from meal plan (computes what's needed)
       const computedList = generateShoppingList(mealPlan);
 
-      // Flatten the computed list
-      const flattenedItems = [];
+      // STEP 4: Flatten the computed list into recipe items
+      const recipeItems = [];
       Object.entries(computedList.items).forEach(([category, items]) => {
         items.forEach(item => {
-          flattenedItems.push({
-            id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+          recipeItems.push({
+            id: `recipe_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             name: item.name,
             quantity: item.quantity,
             unit: item.unit,
@@ -195,22 +208,26 @@ function ShoppingListPage() {
         });
       });
 
-      // Save to Firestore (replaces existing recipe-sourced items)
-      await saveShoppingListItems(flattenedItems);
+      // STEP 5: Combine manual items + recipe items
+      const combinedList = [...manualItems, ...recipeItems];
+      console.log(`✅ Combined list: ${manualItems.length} manual + ${recipeItems.length} recipe = ${combinedList.length} total items`);
 
-      // Update local state
-      setStoredShoppingList(flattenedItems);
+      // STEP 6: Save combined list to Firestore
+      await saveShoppingListItems(combinedList);
+
+      // STEP 7: Update local state
+      setStoredShoppingList(combinedList);
 
       setTransferMessage({
         type: 'success',
-        text: `✅ Generated shopping list with ${flattenedItems.length} items from your meal plan!`
+        text: `✅ Generated shopping list with ${recipeItems.length} recipe items! (${manualItems.length} manual items preserved)`
       });
 
       setTimeout(() => {
         setTransferMessage({ type: '', text: '' });
       }, 5000);
 
-      console.log(`✅ Generated ${flattenedItems.length} items from meal plan`);
+      console.log(`✅ Shopping list generated successfully`);
     } catch (error) {
       console.error('❌ Error generating shopping list:', error);
       setTransferMessage({
@@ -268,6 +285,47 @@ function ShoppingListPage() {
       setTransferMessage({
         type: 'error',
         text: 'Failed to clear shopping list. Please try again.'
+      });
+
+      setTimeout(() => {
+        setTransferMessage({ type: '', text: '' });
+      }, 5000);
+    }
+  };
+
+  // ============================================================================
+  // HANDLERS - Add Manual Item
+  // ============================================================================
+
+  /**
+   * Handles adding a manually-entered item to the shopping list
+   * These are items not from recipes (paper towels, cleaning supplies, etc.)
+   */
+  const handleAddManualItem = async (item) => {
+    try {
+      console.log('➕ Adding manual item:', item);
+
+      // Save to Firestore
+      await addManualItemToShoppingList(item);
+
+      // Add to local state immediately for instant UI update
+      setStoredShoppingList(prev => [...prev, item]);
+
+      setTransferMessage({
+        type: 'success',
+        text: `✅ Added "${item.name}" to shopping list!`
+      });
+
+      setTimeout(() => {
+        setTransferMessage({ type: '', text: '' });
+      }, 3000);
+
+      console.log('✅ Manual item added to shopping list');
+    } catch (error) {
+      console.error('❌ Error adding manual item:', error);
+      setTransferMessage({
+        type: 'error',
+        text: 'Failed to add item. Please try again.'
       });
 
       setTimeout(() => {
@@ -530,6 +588,7 @@ function ShoppingListPage() {
         generating={generating}
         onClear={handleClearShoppingList}
         hasItems={hasItems}
+        onAddManualItem={() => setShowAddItemModal(true)}
       />
 
       {hasItems ? (
@@ -651,6 +710,13 @@ function ShoppingListPage() {
         onUseRecipeAmounts={useRecipeAmounts}
         onTransfer={handleTransferToPantry}
         transferring={transferring}
+      />
+
+      {/* Add Manual Item Modal */}
+      <AddManualItemModal
+        isOpen={showAddItemModal}
+        onClose={() => setShowAddItemModal(false)}
+        onAdd={handleAddManualItem}
       />
     </div>
   );
