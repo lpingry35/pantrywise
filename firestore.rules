@@ -1,0 +1,92 @@
+rules_version = '2';
+
+/**
+ * ============================================================================
+ * FIRESTORE SECURITY RULES FOR PANTRYWISE
+ * ============================================================================
+ *
+ * PURPOSE:
+ * Protect user data so each user can ONLY access their own data.
+ * Prevents unauthorized access, data theft, and privacy violations.
+ *
+ * HOW IT WORKS:
+ * - Each user's data is stored under /users/{userId}/
+ * - Security rules check: Is user logged in? Does userId match?
+ * - If YES to both: Access granted ✅
+ * - If NO to either: Access denied ❌
+ *
+ * WHAT'S PROTECTED:
+ * - Recipes (users/{userId}/recipes)
+ * - Meal Plans (users/{userId}/mealPlans)
+ * - Current Meal Plan (users/{userId}/currentMealPlan)
+ * - Shopping Lists (users/{userId}/currentShoppingList)
+ * - Pantry Items (users/{userId}/pantry)
+ * - Cooking History (users/{userId}/cookingHistory)
+ * - Leftovers (users/{userId}/leftovers)
+ * - Saved Meal Plans (users/{userId}/savedMealPlans)
+ *
+ * TESTING:
+ * - User can access their own data ✅
+ * - User CANNOT access other users' data ❌
+ * - Logged-out users CANNOT access any data ❌
+ */
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================================================
+    // MAIN SECURITY RULE: Users can only access THEIR OWN data
+    // ==========================================================================
+
+    /**
+     * MATCH PATTERN: /users/{userId}/{anySubcollection}
+     *
+     * This matches ALL paths like:
+     * - /users/abc123/recipes/recipe1
+     * - /users/abc123/mealPlans/plan1
+     * - /users/abc123/pantry/item1
+     * - etc.
+     *
+     * RULE: allow read, write IF:
+     * 1. User is authenticated (logged in)
+     * 2. AND user's ID matches the userId in the path
+     *
+     * EXAMPLES:
+     *
+     * User ABC (logged in) tries to read /users/abc123/recipes:
+     * - request.auth != null? YES ✅ (logged in)
+     * - request.auth.uid == abc123? YES ✅ (matches)
+     * - Result: ACCESS GRANTED ✅
+     *
+     * User ABC tries to read /users/xyz789/recipes:
+     * - request.auth != null? YES ✅ (logged in)
+     * - request.auth.uid == xyz789? NO ❌ (doesn't match!)
+     * - Result: ACCESS DENIED ❌
+     *
+     * Logged-out user tries to read /users/abc123/recipes:
+     * - request.auth != null? NO ❌ (not logged in!)
+     * - Result: ACCESS DENIED ❌
+     */
+    match /users/{userId}/{document=**} {
+      // Allow read and write ONLY if:
+      // 1. User is authenticated (request.auth != null)
+      // 2. AND their user ID matches the path's userId
+      allow read, write: if request.auth != null
+                         && request.auth.uid == userId;
+    }
+
+    // ==========================================================================
+    // DENY ALL OTHER PATHS
+    // ==========================================================================
+
+    /**
+     * Any path NOT matching /users/{userId}/ is DENIED by default.
+     * This is a security best practice: deny by default, allow explicitly.
+     */
+
+    // Block access to root collection (shouldn't exist anyway)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
