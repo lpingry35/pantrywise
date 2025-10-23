@@ -24,13 +24,14 @@ function Navigation() {
 
   // Navigation links with icons
   // Each link includes an icon component from lucide-react for better visual navigation
+  // data-tour attributes enable the welcome tutorial to highlight these links
   const navLinks = [
-    { path: '/', label: 'Home', icon: Home },
-    { path: '/recipes', label: 'Recipes', icon: BookOpen },
-    { path: '/pantry', label: 'My Pantry', icon: Package },
-    { path: '/meal-planner', label: 'Meal Planner', icon: Calendar },
-    { path: '/shopping-list', label: 'Shopping List', icon: ShoppingCart },
-    { path: '/stats', label: 'Insights', icon: BarChart3 },
+    { path: '/', label: 'Home', icon: Home, dataTour: null },
+    { path: '/recipes', label: 'Recipes', icon: BookOpen, dataTour: 'recipe-library' },
+    { path: '/pantry', label: 'My Pantry', icon: Package, dataTour: 'pantry' },
+    { path: '/meal-planner', label: 'Meal Planner', icon: Calendar, dataTour: 'meal-planner' },
+    { path: '/shopping-list', label: 'Shopping List', icon: ShoppingCart, dataTour: 'shopping-list' },
+    { path: '/stats', label: 'Insights', icon: BarChart3, dataTour: 'insights' },
   ];
 
   return (
@@ -58,6 +59,7 @@ function Navigation() {
                       : 'text-gray-700 hover:bg-gray-100'
                   }`}
                   aria-label={link.label}
+                  data-tour={link.dataTour || undefined}
                 >
                   {/* Icon - size 18px for consistent navigation appearance */}
                   <IconComponent size={18} aria-hidden="true" />

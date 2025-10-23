@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { MealPlanProvider } from './context/MealPlanContext';
 import Navigation from './components/Navigation';
+import WelcomeTutorial from './components/WelcomeTutorial';
 import Home from './pages/Home';
 import RecipeLibrary from './pages/RecipeLibrary';
 import RecipeDetail from './pages/RecipeDetail';
@@ -149,6 +150,9 @@ function App() {
                 }
               />
             </Routes>
+
+            {/* Welcome Tutorial - Shows on first visit for new users and guest accounts */}
+            <WelcomeTutorial />
           </div>
         </Router>
       </MealPlanProvider>

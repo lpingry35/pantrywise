@@ -389,6 +389,7 @@ function RecipeLibrary() {
             <button
               onClick={() => navigate('/recipes/new')}
               className="w-full bg-success text-white px-4 py-2 rounded-md hover:bg-success-hover transition-colors font-medium"
+              data-tour="add-recipe-button"
             >
               + Add New Recipe
             </button>
