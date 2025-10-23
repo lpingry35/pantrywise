@@ -1,7 +1,15 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useMealPlan } from '../context/MealPlanContext';
+import { useAuth } from '../context/AuthContext';
 import { generateShoppingList, exportShoppingListText } from '../utils/shoppingListGenerator';
 import { compareShoppingListWithPantry } from '../utils/ingredientMatching';
+import {
+  getShoppingListItems,
+  saveShoppingListItems,
+  clearShoppingList,
+  transferItemsToPantry,
+  getPantryItems
+} from '../services/firestoreService';
 import { ShoppingCart, Trash2 } from 'lucide-react';
 
 // Import refactored components from shoppingList folder
@@ -31,14 +39,17 @@ import PantryTransferModal from '../components/shoppingList/PantryTransferModal'
  *
  * RESPONSIBILITIES (This File):
  * - State management (checked items, editable items, toggles)
- * - Generate shopping list from meal plan
+ * - Load shopping list from Firestore (STORED, not computed)
+ * - Generate shopping list from meal plan (saves to Firestore)
  * - Compare with pantry items
  * - Handle transfer to pantry logic
  * - Coordinate child components
  * - No rendering logic (delegated to components)
  *
  * KEY FEATURES:
- * - Auto-generates from meal plan
+ * - Stored shopping list (persists across sessions)
+ * - Generate from meal plan button (saves to Firestore)
+ * - Clear shopping list independently of meal plan
  * - Pantry awareness (3 categories: Already Have, Need More, Need to Buy)
  * - Editable quantities for transfer to pantry
  * - Export functionality
@@ -53,7 +64,13 @@ function ShoppingListPage() {
   // ============================================================================
 
   // Get meal plan and pantry from context
-  const { mealPlan, pantryItems, transferShoppingListToPantry, clearMealPlan } = useMealPlan();
+  const { mealPlan, pantryItems, transferShoppingListToPantry } = useMealPlan();
+  const { currentUser } = useAuth();
+
+  // Shopping list items (STORED in Firestore, not computed)
+  const [storedShoppingList, setStoredShoppingList] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [generating, setGenerating] = useState(false);
 
   // Checkbox state for marking items as purchased
   const [checkedItems, setCheckedItems] = useState({});
@@ -70,20 +87,42 @@ function ShoppingListPage() {
   const [transferMessage, setTransferMessage] = useState({ type: '', text: '' });
 
   // ============================================================================
+  // LOAD SHOPPING LIST FROM FIRESTORE
+  // ============================================================================
+
+  useEffect(() => {
+    async function loadShoppingList() {
+      if (!currentUser) {
+        setStoredShoppingList([]);
+        setLoading(false);
+        return;
+      }
+
+      try {
+        console.log('📋 Loading shopping list from Firestore...');
+        const items = await getShoppingListItems();
+        setStoredShoppingList(items);
+        console.log(`✅ Loaded ${items.length} shopping list items`);
+      } catch (error) {
+        console.error('❌ Error loading shopping list:', error);
+        setTransferMessage({
+          type: 'error',
+          text: 'Failed to load shopping list. Please refresh the page.'
+        });
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadShoppingList();
+  }, [currentUser]);
+
+  // ============================================================================
   // SHOPPING LIST GENERATION & CATEGORIZATION
   // ============================================================================
 
-  // Generate shopping list from meal plan
-  const shoppingList = generateShoppingList(mealPlan);
-
-  // Flatten all items for pantry comparison
-  const allShoppingItems = useMemo(() => {
-    const items = [];
-    Object.values(shoppingList.items).forEach(categoryItems => {
-      items.push(...categoryItems);
-    });
-    return items;
-  }, [shoppingList.items]);
+  // Use stored shopping list (no longer computed from meal plan)
+  const allShoppingItems = storedShoppingList;
 
   // Compare with pantry to categorize items into 3 groups
   // 1. alreadyHave - Items in pantry with sufficient quantity
@@ -117,7 +156,125 @@ function ShoppingListPage() {
   const checkedOffCount = Object.values(checkedItems).filter(Boolean).length;
 
   // Check if list has items
-  const hasItems = shoppingList.totalItems > 0;
+  const hasItems = allShoppingItems.length > 0;
+
+  // Calculate total cost (rough estimate: $2.50 per item)
+  const totalCost = allShoppingItems.reduce((sum, item) => sum + (item.costPerServing || 2.5), 0);
+
+  // ============================================================================
+  // HANDLERS - Generate from Meal Plan
+  // ============================================================================
+
+  /**
+   * Generates shopping list from current meal plan and saves to Firestore
+   */
+  const handleGenerateFromMealPlan = async () => {
+    try {
+      setGenerating(true);
+      console.log('🛒 Generating shopping list from meal plan...');
+
+      // Generate shopping list from meal plan (computes what's needed)
+      const computedList = generateShoppingList(mealPlan);
+
+      // Flatten the computed list
+      const flattenedItems = [];
+      Object.entries(computedList.items).forEach(([category, items]) => {
+        items.forEach(item => {
+          flattenedItems.push({
+            id: `${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            name: item.name,
+            quantity: item.quantity,
+            unit: item.unit,
+            category: category,
+            source: 'recipe',
+            recipeIds: item.recipes?.map(r => r.id) || [],
+            recipeNames: item.recipes?.map(r => r.name) || [],
+            checked: false,
+            costPerServing: item.costPerServing || 2.5
+          });
+        });
+      });
+
+      // Save to Firestore (replaces existing recipe-sourced items)
+      await saveShoppingListItems(flattenedItems);
+
+      // Update local state
+      setStoredShoppingList(flattenedItems);
+
+      setTransferMessage({
+        type: 'success',
+        text: `✅ Generated shopping list with ${flattenedItems.length} items from your meal plan!`
+      });
+
+      setTimeout(() => {
+        setTransferMessage({ type: '', text: '' });
+      }, 5000);
+
+      console.log(`✅ Generated ${flattenedItems.length} items from meal plan`);
+    } catch (error) {
+      console.error('❌ Error generating shopping list:', error);
+      setTransferMessage({
+        type: 'error',
+        text: 'Failed to generate shopping list. Please try again.'
+      });
+
+      setTimeout(() => {
+        setTransferMessage({ type: '', text: '' });
+      }, 5000);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
+  // ============================================================================
+  // HANDLERS - Clear Shopping List
+  // ============================================================================
+
+  /**
+   * Clears all shopping list items from Firestore
+   */
+  const handleClearShoppingList = async () => {
+    const confirmed = window.confirm(
+      '⚠️ Clear Shopping List?\n\n' +
+      'This will remove all items from your shopping list.\n\n' +
+      'Your meal plan will NOT be affected.\n\n' +
+      'Continue?'
+    );
+
+    if (!confirmed) return;
+
+    try {
+      console.log('🗑️ Clearing shopping list...');
+
+      // Clear from Firestore
+      await clearShoppingList();
+
+      // Clear local state
+      setStoredShoppingList([]);
+      setCheckedItems({});
+
+      setTransferMessage({
+        type: 'success',
+        text: '✅ Shopping list cleared! Your meal plan is still on the calendar.'
+      });
+
+      setTimeout(() => {
+        setTransferMessage({ type: '', text: '' });
+      }, 5000);
+
+      console.log('✅ Shopping list cleared');
+    } catch (error) {
+      console.error('❌ Error clearing shopping list:', error);
+      setTransferMessage({
+        type: 'error',
+        text: 'Failed to clear shopping list. Please try again.'
+      });
+
+      setTimeout(() => {
+        setTransferMessage({ type: '', text: '' });
+      }, 5000);
+    }
+  };
 
   // ============================================================================
   // HANDLERS - Checkbox Toggle
@@ -144,7 +301,13 @@ function ShoppingListPage() {
    * Future: Download as file, copy to clipboard, email
    */
   const handleExport = () => {
-    const text = exportShoppingListText(shoppingList);
+    // Create a shoppingList object structure expected by exportShoppingListText
+    const formattedList = {
+      items: { all: allShoppingItems },
+      totalItems: allShoppingItems.length,
+      totalCost: totalCost
+    };
+    const text = exportShoppingListText(formattedList);
     alert(text);
     console.log(text);
   };
@@ -210,12 +373,13 @@ function ShoppingListPage() {
   };
 
   /**
-   * Handles transfer of shopping items to pantry
-   * @param {boolean} clearAfterTransfer - Whether to clear meal plan after transfer
+   * Handles transfer of shopping items to pantry using SEQUENTIAL writes (NO RACE CONDITIONS)
+   * NOTE: clearAfterTransfer parameter is ignored - meal plan always stays intact
    */
   const handleTransferToPantry = async (clearAfterTransfer = false) => {
     try {
       setTransferring(true);
+      console.log('🚀 Starting pantry transfer...');
 
       // Filter out skipped items and validate
       const itemsToTransfer = editableItems
@@ -236,41 +400,37 @@ function ShoppingListPage() {
         return;
       }
 
-      // Transfer to pantry
-      const result = transferShoppingListToPantry(itemsToTransfer);
+      // Transfer to pantry using NEW SEQUENTIAL function
+      const results = await transferItemsToPantry(itemsToTransfer);
 
-      if (result.success) {
-        setTransferMessage({
-          type: 'success',
-          text: result.message
-        });
+      console.log('✅ Transfer complete:', results);
 
-        if (clearAfterTransfer) {
-          clearMealPlan();
-        }
-
-        setShowTransferConfirm(false);
-        setEditableItems([]);
-
-        // Auto-hide message after 5 seconds
-        setTimeout(() => {
-          setTransferMessage({ type: '', text: '' });
-        }, 5000);
-      } else {
-        setTransferMessage({
-          type: 'error',
-          text: result.message
-        });
-
-        setTimeout(() => {
-          setTransferMessage({ type: '', text: '' });
-        }, 5000);
+      // Show transfer summary in console for debugging
+      if (itemsToTransfer.length > 0) {
+        console.log('📊 Transferred items:', itemsToTransfer.map(i => `${i.name} (${i.quantity} ${i.unit})`));
       }
+
+      // CRITICAL: Wait for Firestore to fully propagate changes
+      // Firestore writes are async and need time to replicate across clients
+      console.log('⏳ Waiting 1 second for Firestore to propagate changes...');
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      console.log('🔄 Reloading page to refresh pantry data and recategorize shopping list...');
+
+      // Close modal before reload
+      setShowTransferConfirm(false);
+
+      // Force page reload to:
+      // 1. Reload pantry from Firestore (via MealPlanContext)
+      // 2. Trigger shopping list recategorization with updated pantry
+      // 3. Show items in correct categories (Already Have, Need More, Need to Buy)
+      window.location.reload();
+
     } catch (error) {
       console.error('Error during transfer:', error);
       setTransferMessage({
         type: 'error',
-        text: 'An unexpected error occurred. Please try again.'
+        text: `❌ Transfer failed: ${error.message}\n\nYour meal plan is still on the calendar.`
       });
 
       setTimeout(() => {
@@ -285,6 +445,20 @@ function ShoppingListPage() {
   // RENDER
   // ============================================================================
 
+  // Show loading state while fetching shopping list
+  if (loading) {
+    return (
+      <div className="container mx-auto px-4 py-8 max-w-5xl">
+        <div className="flex items-center justify-center h-64">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-primary mx-auto mb-4"></div>
+            <p className="text-gray-600 text-lg">Loading shopping list...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto px-4 py-8 max-w-5xl">
       {/* Page Header with Icon */}
@@ -294,7 +468,7 @@ function ShoppingListPage() {
           <span>Shopping List</span>
         </h1>
         <p className="text-gray-600">
-          Smart shopping list with pantry awareness
+          Stored shopping list - persists across sessions
         </p>
       </div>
 
@@ -342,27 +516,31 @@ function ShoppingListPage() {
         </div>
       )}
 
+      {/* Header with Controls and Actions - ALWAYS VISIBLE */}
+      <ShoppingListHeader
+        showAlreadyHave={showAlreadyHave}
+        onToggleAlreadyHave={() => setShowAlreadyHave(!showAlreadyHave)}
+        hasAlreadyHaveItems={categorizedItems.alreadyHave.length > 0}
+        hasPantryItems={pantryItems.length > 0}
+        onOpenTransferDialog={openTransferDialog}
+        transferring={transferring}
+        hasItemsToTransfer={totalNeedToBuy > 0}
+        onExport={handleExport}
+        onGenerate={handleGenerateFromMealPlan}
+        generating={generating}
+        onClear={handleClearShoppingList}
+        hasItems={hasItems}
+      />
+
       {hasItems ? (
         <>
           {/* Summary Statistics Card */}
           <ShoppingListStats
-            totalItems={shoppingList.totalItems}
-            totalCost={shoppingList.totalCost}
+            totalItems={allShoppingItems.length}
+            totalCost={totalCost}
             estimatedSavings={estimatedSavings}
             remainingNeedToBuy={remainingNeedToBuy}
             checkedOffCount={checkedOffCount}
-          />
-
-          {/* Header with Controls and Actions */}
-          <ShoppingListHeader
-            showAlreadyHave={showAlreadyHave}
-            onToggleAlreadyHave={() => setShowAlreadyHave(!showAlreadyHave)}
-            hasAlreadyHaveItems={categorizedItems.alreadyHave.length > 0}
-            hasPantryItems={pantryItems.length > 0}
-            onOpenTransferDialog={openTransferDialog}
-            transferring={transferring}
-            hasItemsToTransfer={totalNeedToBuy > 0}
-            onExport={handleExport}
           />
 
           {/* Three-Category Shopping List */}
@@ -375,23 +553,32 @@ function ShoppingListPage() {
         </>
       ) : (
         /* Empty State - No Items */
-        <div className="mt-4 p-6 bg-gradient-to-r from-orange-50 to-amber-50 border-2 border-orange-300 rounded-lg shadow-md">
+        <div className="mt-4 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-300 rounded-lg shadow-md">
           <div className="text-center">
             <h3 className="text-xl font-bold text-gray-800 mb-2">
               🛒 Your Shopping List is Empty
             </h3>
-            <p className="text-gray-700 mb-2">
-              Create a meal plan to automatically generate a shopping list, or add items manually.
+            <p className="text-gray-700 mb-4">
+              Generate a shopping list from your meal plan to get started!
             </p>
-            <ul className="text-sm text-gray-600 space-y-1 mb-4">
-              <li>✓ Add recipes to your meal plan for automatic shopping lists</li>
-              <li>✓ Smart pantry comparison shows what you already have</li>
-              <li>✓ See estimated costs and savings before you shop</li>
+            <ul className="text-sm text-gray-600 space-y-2 mb-6">
+              <li className="flex items-center justify-center gap-2">
+                <span className="text-blue-600 font-bold">1.</span>
+                Add recipes to your meal plan calendar
+              </li>
+              <li className="flex items-center justify-center gap-2">
+                <span className="text-blue-600 font-bold">2.</span>
+                Click "Generate from Meal Plan" button above
+              </li>
+              <li className="flex items-center justify-center gap-2">
+                <span className="text-blue-600 font-bold">3.</span>
+                Shopping list auto-creates with all ingredients!
+              </li>
             </ul>
             <div className="flex flex-col sm:flex-row gap-3 justify-center items-center mt-6">
               <a
                 href="/meal-planner"
-                className="inline-flex items-center gap-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white px-6 py-3 rounded-md hover:from-orange-700 hover:to-amber-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-md hover:from-blue-700 hover:to-indigo-700 transition-all font-semibold shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 📅 Go to Meal Planner
               </a>
@@ -438,28 +625,16 @@ function ShoppingListPage() {
         </div>
       )}
 
-      {/* Clear All Button */}
+      {/* Clear All Button - Now clears shopping list independently */}
       {hasItems && (
         <div className="mt-6 flex justify-end">
           <button
-            onClick={() => {
-              const confirmed = window.confirm(
-                '⚠️ Clear Shopping List?\n\n' +
-                'This will:\n' +
-                '• Remove all items from your shopping list\n' +
-                '• Clear your meal plan (shopping list is generated from it)\n\n' +
-                'This action cannot be undone. Continue?'
-              );
-              if (confirmed) {
-                clearMealPlan();
-                console.log('✅ Shopping list and meal plan cleared');
-              }
-            }}
-            disabled={shoppingList.totalItems === 0}
+            onClick={handleClearShoppingList}
+            disabled={!hasItems}
             className="px-6 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors font-semibold flex items-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
-            Clear All
+            Clear Shopping List
           </button>
         </div>
       )}

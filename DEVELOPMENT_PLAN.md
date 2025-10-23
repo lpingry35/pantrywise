@@ -1,291 +1,723 @@
-# Smart Meal Planner - Lean MVP Development Plan
-**Last Updated**: October 20, 2025
+# Smart Meal Planner - Development Plan (PantryWise)
 
-## Money-Saving Meal Planning with Ingredient Sharing
-### 4-Week Launch Strategy
+**Last Updated: October 22, 2025**
 
 ---
 
-## ✅ COMPLETED PHASES
+## Phase 1-5: Core MVP ✅ COMPLETED
 
-### Phase 1: Recipe Management ✅ COMPLETED
-- Recipe library with CRUD operations
-- Recipe detail view
-- Add/Edit recipe form
-
-### Phase 2: Recipe Management ✅ COMPLETED  
-- Recipe filtering and search
-- Recipe categories/tags
-
-### Phase 3: Ingredient Matching ✅ COMPLETED
-- Ingredient normalization logic
-- Recipe matching algorithm
-- Shared ingredients display
-
-### Phase 4: Meal Planning & Shopping List ✅ COMPLETED
-- 7-day meal planner grid
-- Drag-and-drop or click-to-add recipes
-- Shopping list generator
-- Ingredient consolidation
+All core features implemented including:
+- Recipe management
+- Ingredient matching engine
+- Meal planning calendar
+- Shopping list generation
 - Cost savings calculator
-
-### Phase 5: Pantry Tracking ✅ COMPLETED
-- Pantry inventory management
-- Pantry matching with recipes
-- "You have X of Y ingredients" display
+- Firebase integration
 
 ---
 
-## ✅ PHASE 6: Polish & Launch Ready (95% COMPLETE)
+## Phase 6: Polish & Launch Ready ✅ COMPLETED (95%)
 
-**Timeline**: Days 29-28 (Week 4)  
-**Status**: NEARLY COMPLETE
+### 6.1 Save & Load Meal Plans ✅ COMPLETED (Oct 20, 2025)
+- Multiple meal plan saves with custom names
+- Load/delete previous plans
+- Proper UI integration
 
-### ✅ Completed:
-- **6.0 Firebase Testing & Verification** - Connected and working
-- **6.1 Save & Load Meal Plans** ✅ (Completed Oct 20, 2025)
-  - ✅ Save meal plans with custom names
-  - ✅ Show list of saved meal plans
-  - ✅ Load previous meal plans
-  - ✅ Delete individual saved plans
-  - ✅ UI improvements implemented
-- **6.2 Data Persistence** - All data saves to Firebase
-- **6.3 UI Polish** (Partial):
-  - ✅ Confirmation dialogs before deleting
-  - ✅ Success messages when saving
-  - ⚠️ "Check console" message (minor issue)
-  - ❓ Mobile-friendly design (untested)
-- **6.4 Sample Data & Demo** - 20-25 recipes loaded
+### 6.2-6.4 ✅ All data persistence, UI polish, and sample data complete
 
-### ⬜ Remaining:
-- Test mobile responsiveness
-- Deploy to Vercel/Netlify
+### 6.5 Deployment ✅ COMPLETED (Oct 20, 2025)
+- Deployed to Vercel as pantrywise.vercel.app
+- Environment variables configured
+- Live and functional
+
+### 6.6 GitHub & Version Control ✅ COMPLETED (Oct 21, 2025)
+- **Git repository initialized** with main branch
+- **GitHub repository created:** https://github.com/lpingry35/pantrywise
+- **Connected to Vercel** for automatic deployments
+- **Workflow established:**
+  1. Edit code locally
+  2. `git add .` (stage changes)
+  3. `git commit -m "description of changes"` (save snapshot)
+  4. `git push` (upload to GitHub)
+  5. Vercel automatically deploys (no manual `vercel --prod` needed!)
+- **Benefits:**
+  - Code backed up on GitHub
+  - Version history tracking
+  - Automatic deployments on every push
+  - Professional development workflow
+  - Can collaborate with others in future
 
 ---
 
-## 🔮 PHASE 7: Advanced Features (Post-MVP)
+## Phase 7: Advanced Features (In Progress)
 
-**Estimated Timeline**: Weeks 7+  
-**Status**: IN PROGRESS - Working on 7.5.1
+### 7.0 Home Page Redesign ✅ COMPLETED
 
-### ✅ Completed Items:
-- **7.0 Home Page Redesign** ✅ COMPLETED
-- **7.1.1 URL/Website Scraping** ✅ COMPLETED
-  - Three-tier parsing strategy (JSON-LD, Microdata, HTML)
-  - Comprehensive browser headers
-  - Works with AllRecipes, Food Network, most schema.org sites
-  - *Note*: Has TD-008 (833 lines, needs refactoring)
+### 7.1 Recipe Import Methods
+- **7.1.1 URL/Website Scraping** ✅ COMPLETED (AllRecipes, Food Network)
+- 7.1.2-7.1.5 Not started (OCR, PDF, Google Search)
+
+### 7.2 User Accounts & Authentication ✅ COMPLETED (Oct 20, 2025)
+- Firebase Auth implementation complete
+- Email/password authentication
+- User-scoped data (each user has private data)
+- Protected routes
+- Logout functionality
+
+### 7.2.1 Security & Privacy Implementation ✅ COMPLETED (Oct 22, 2025)
+- **Firebase Security Rules:** ✅ DEPLOYED
+  - Users can only read/write their own data
+  - No cross-user data access
+  - Authenticated users only
+  - Server-side enforcement (cannot be bypassed)
+  - Deployed via Firebase Console
+  - Tested and verified working
+- **Privacy Features:** ⏳ IN PROGRESS
+  - Privacy Policy page (what data collected, how used)
+  - Terms of Service page
+  - Delete Account option (complete data removal)
+  - Data export functionality (GDPR compliance)
+- **Security Best Practices:**
+  - Rate limiting on auth attempts
+  - Secure session management
+  - Email verification for new accounts
+- **UX Improvement Needed:** ⬜ NOT STARTED (30 min)
+  - Currently: Logged-out users see white screen on protected pages
+  - Should: Redirect to login page with message "Please log in to access this page"
+  - Affect pages: Meal Planner, Pantry, Shopping List, Insights
+  - Implementation: Add route guards that check auth state and redirect
+
+### 7.2.2 Demo/Explore Mode (Future Enhancement)
+- Allow visitors to explore app before creating account
+- Demo mode with sample data (read-only)
+- Interactive tour of features
+- "Try it out" functionality without signup
+- Convert demo users to real accounts
+- Show value before requiring registration
+
+### 7.3 Dietary Preferences (Not Started)
+
+### 7.4 Unit Conversion
 - **7.4.1 Unit Conversion System** ✅ COMPLETED
-  - Volume-to-volume, weight-to-weight, count conversions
-  - 400+ lines implemented
-  - Handles conversion failures gracefully
-- **7.5.1a Shopping List → Pantry Transfer (Basic)** ✅ COMPLETED (Oct 20, 2025)
-  - Transfer purchased items to pantry
-  - Prompt for actual quantities purchased (not recipe amounts)
-  - User enters what they actually bought
-  - Handle quantity additions for existing items
-  - *Note*: ShoppingListPage.jsx now 800+ lines (TD-009)
 
-### 🚧 In Progress:
-- **7.5 Pantry Lifecycle Management** (Added Oct 20, 2025)
-  
-  **7.5.1b Common Package Suggestions** (Future Enhancement)
-  - Show common retail package sizes (8 oz bag, 1 lb box, etc.)
-  - Quick-select buttons for standard quantities
-  - Learn from user patterns over time
-  
-  **7.5.1c Retail Intelligence** (Long-term)
-  - Integrate with grocery store APIs
-  - Show actual products and prices
-  - Auto-suggest based on local store inventory
-  
-  **7.5.2 Recipe Completion Tracking** (Starting Now)
-  - Mark recipes as "cooked/completed" from meal planner
-  - Deduct used ingredients from pantry
-  - Track cooking history
-  - Handle partial quantities
-  - Prevent negative pantry quantities
-  
-  **Questions to Consider When Implementing 7.5.2:**
-  - Where should "Mark as Cooked" button live? (meal planner calendar, recipe cards, or both?)
-  - How to handle partial recipe cooking? (if someone makes half a recipe)
-  - Should we track cooking history? (show "You made this 3 times", help with suggestions)
-  - How to handle insufficient pantry quantities? (warning with override option?)
-  
-  **7.5.3 Manual Pantry Editing** (NEW - Oct 20, 2025)
-  - **Issue**: Users cook things outside of meal plans (leftovers, snacks, non-recipe meals)
-  - **Solution**: Make every pantry item quantity editable
-  - Features needed:
-    - Edit quantity for any pantry item (increase or decrease)
-    - Quick subtract buttons (-1 cup, -1/2 cup, etc.)
-    - Delete individual items
-    - Manual add items not from shopping
-    - "Used for other cooking" quick deduction
-  - **Use Cases**:
-    - Made sandwiches (deduct bread, lunch meat)
-    - Used ingredients for non-planned meals
-    - Gave some ingredients to neighbor
-    - Some food went bad
-    - Manual corrections
-  
-  **7.5.4 Pantry Intelligence** (Future Enhancement - renamed from 7.5.3)
-  - Low stock warnings
-  - Expiration date tracking (optional)
-  - Pantry analytics (most used ingredients)
-  - Smart shopping suggestions based on pantry
-  
-  **Implementation Order:**
-  1. Shopping → Pantry Transfer with quantity adjustment 🚧 CURRENT
-  2. Recipe Completion Tracking (more complex, needs UI decisions)  
-  3. Pantry Intelligence (analytics, future enhancement)
+### 7.5 Pantry Lifecycle Management
+- **7.5.1 Shopping → Pantry Transfer** ✅ COMPLETED (Oct 20, 2025)
+- **7.5.2 Recipe Completion Tracking** ✅ COMPLETED (Oct 20, 2025)
+  - Cooking history with 5-star ratings
+  - Pantry deduction on cooking
+- **7.5.3 Manual Pantry Editing** ✅ COMPLETED (Oct 21, 2025)
+  - Edit button on each pantry item
+  - Update quantity, unit, or ingredient name
+  - Modal form with pre-filled values
+  - Save changes to Firestore
+  - Error handling and validation
+- **7.5.4 Leftover Tracking** ✅ COMPLETED (Oct 21, 2025)
+  - Mark leftovers when cooking recipes
+  - Track servings and expiration dates (3 days default)
+  - Collapsible widget in Meal Planner (collapsed by default)
+  - Warning indicators for items expiring within 2 days
+  - Full display in Insights page with orange gradient card
+  - localStorage remembers widget expanded/collapsed preference
+  - Delete leftovers individually
+  - Firestore path: users/{userId}/leftovers/{leftoverId}
+- 7.5.5 Pantry Intelligence (Future)
+- 7.5.6 Smart Can Size Selection (Future)
+- 7.5.7 Firebase Read Optimization (Future)
 
-### ⬜ Not Started:
-- **7.1.2 Screenshot/Image OCR**
-- **7.1.3 Manual Ingredient Library**
-- **7.1.4 Recipe Import from PDF/Document**
-- **7.1.5 Google Search Integration**
-- **7.2 User Accounts & Authentication**
-- **7.3 Dietary Preferences**
-- **7.4.2 Advanced Unit Features** (user preferences, temperature, etc.)
-- **7.6 Shopping List & Meal Plan Clear Functions** (NEW - Oct 20, 2025)
-  - **Issue**: Shopping list and meal plan are synchronized - need proper clear functionality
-  - **Design Decision Needed**: How to handle clearing when they're connected
-  
-  **Option A: Clear Shopping List Regenerates from Meal Plan**
-  - Clear Shopping List button clears and immediately regenerates from current meal plan
-  - Useful for "recalculating" if something got messed up
-  - Keeps meal plan as source of truth
-  
-  **Option B: Separate the Generation (Snapshot Model)**
-  - Shopping list becomes a "snapshot" when generated
-  - Changes to meal plan don't auto-update shopping list
-  - User must explicitly regenerate
-  - More control but less synchronized
-  
-  **Option C: Both Clear Buttons in Appropriate Places**
-  - "Clear Meal Plan" on the Meal Planner page (where it belongs)
-  - "Clear & Regenerate List" on Shopping List page
-  - Each page manages its own data
-  - Most explicit but potentially more complex
-  
-  **To Decide Later During Refactor**:
-  - Which model best fits user workflow?
-  - Should lists be synchronized or snapshots?
-  - Where should clear functions live?
-- **7.5 Pantry Lifecycle Management** (NEW - Added Oct 20, 2025)
-  
-  **7.5.1 Shopping List → Pantry Transfer**
-  - Mark shopping list as "purchased/complete"
-  - Auto-add all ingredients to pantry
-  - Handle quantity additions for existing items
-  - Show confirmation of transfer
-  - Clear or archive completed shopping lists
-  
-  **7.5.2 Recipe Completion Tracking**
-  - Mark recipes as "cooked/completed"
-  - Deduct used ingredients from pantry
-  - Track cooking history
-  - Handle partial quantities
-  - Prevent negative pantry quantities
-  
-  **Questions to Consider When Implementing:**
-  - Where should "Mark as Cooked" button live? (meal planner calendar, recipe cards, or both?)
-  - How to handle partial recipe cooking? (if someone makes half a recipe)
-  - Should we track cooking history? (show "You made this 3 times", help with suggestions)
-  - How to handle insufficient pantry quantities? (warning with override option?)
-  
-  **7.5.3 Pantry Intelligence** (Future Enhancement)
-  - Low stock warnings
-  - Expiration date tracking (optional)
-  - Pantry analytics (most used ingredients)
-  - Smart shopping suggestions based on pantry
-  
-  **Implementation Order:**
-  1. Shopping → Pantry Transfer (simpler, immediate value)
-  2. Recipe Completion Tracking (more complex, needs UI decisions)  
-  3. Pantry Intelligence (analytics, future enhancement)
+### 7.6 Shopping List & Meal Plan Clear Functions (Not Started)
+
+### 7.7 Shared Household Accounts (Future Vision)
+
+### 7.8 Navigation Icons ✅ COMPLETED (Oct 20, 2025)
+
+### 7.9 Insights Page ✅ COMPLETED (Oct 21, 2025)
+- **Kitchen statistics dashboard** showing:
+  - Recipe Library stats (total count)
+  - Cooking History (total cooked, highest rated, most cooked)
+  - Pantry stats (ingredient count)
+  - Leftover tracking (count, expiring items, full list)
+  - Coming Soon placeholder for future features
+- **Navigation integration** with BarChart3 icon
+- **Empty states** for new users
+- **Gradient cards** with color-coded sections
+- **Route:** /insights
+
+### 7.10 Welcome Tutorial / Onboarding Flow ⏳ READY TO START (Recommended)
+- **Goal:** Guide new users through the app with an interactive tour
+- **Priority:** High (do after security rules, help users get started)
+- **Time Estimate:** 2-3 hours
+- **Difficulty:** 4/10 (Medium-Easy)
+- **Library:** React Joyride (recommended) OR custom modal tour
+
+**Why This Matters:**
+- New users don't know where to start
+- Empty app can be confusing
+- Tutorial shows them the workflow
+- Increases user activation and retention
+- Professional onboarding experience
+
+**Features to Include:**
+- Interactive step-by-step tour of all main pages
+- Spotlight highlighting on key elements
+- Tooltip explanations for each feature
+- Progress indicator (Step 1 of 7)
+- Next/Previous/Skip buttons
+- Auto-scrolls to highlighted elements
+- Mobile responsive
+- Remembers completion (localStorage)
+- Can be restarted from help menu or settings
+
+**Tour Steps (7 total):**
+1. **Welcome Screen** - "Welcome to PantryWise! Let's show you around (2 min tour)"
+2. **Recipe Library** - "Start by importing recipes from URLs or load sample recipes"
+3. **Add Recipe Button** - "Click here to import from any cooking website"
+4. **Meal Planner** - "Plan your week by adding recipes to your calendar"
+5. **My Pantry** - "Track ingredients you already have at home"
+6. **Shopping List** - "Auto-generates from meal plan, minus pantry items"
+7. **Insights** - "Track stats, leftovers, and savings. You're all set! 🎉"
+
+**Implementation Options:**
+
+**OPTION A: React Joyride (Recommended)**
+- Professional tour library
+- Easy to implement
+- Handles spotlight, tooltips, scrolling
+- Mobile responsive out of box
+- Steps: `npm install react-joyride`
+
+**OPTION B: Custom Modal Tour (Simpler)**
+- Series of modals with arrows pointing to features
+- Easier to customize
+- No external dependency
+- More control over styling
+- Steps: Create TutorialModal component
+
+**Implementation Steps:**
+1. Choose Option A (Joyride) or Option B (Custom)
+2. Create tutorialSteps.js with all tour content
+3. Add tutorial state management to App.jsx
+4. Check localStorage for first-time visitors
+5. Trigger tutorial for new users and guest accounts
+6. Add "Restart Tutorial" button in navigation or settings
+7. Style to match PantryWise theme (blue/purple gradient)
+8. Test on mobile and desktop
+9. Ensure all steps are skippable
+
+**User Triggers:**
+- First-time visitor (hasSeenTutorial = false in localStorage)
+- New account creation (show after signup)
+- Guest users (show on first visit)
+- Manual restart (from help/settings menu or footer)
+
+**Technical Details:**
+- Uses localStorage key: `pantrywise_hasSeenTutorial`
+- Persistent across sessions
+- Per-browser (different on phone vs desktop is OK)
+- Can be cleared to test again
+- No Firestore needed (local only)
+- Add "Show Tutorial" link in footer or settings
+
+**Design Requirements:**
+- Must be SKIPPABLE at any time (big X button)
+- Non-blocking (can close and continue using app)
+- Clear visual hierarchy (spotlight + tooltip)
+- Brand colors (PantryWise blue #3b82f6, purple #9333ea)
+- Smooth transitions between steps
+- Mobile-friendly (responsive positioning)
+- Fun and encouraging tone (emojis OK!)
+
+**Best Practices:**
+- Keep text concise (2-3 sentences max per step)
+- Use emojis for visual interest (📚 🥘 🛒 📊)
+- Show don't tell (highlight actual elements)
+- Make it fast (7 steps total, ~2 minutes)
+- Always allow skip/close at any time
+- Celebrate completion ("You're ready to start saving! 🎉")
+
+**Success Metrics:**
+- % of users who complete tutorial
+- % of users who skip
+- Which steps get skipped most
+- User activation rate after tutorial
+- Time to first action (add recipe, create plan)
+
+### 7.11 Barcode Scanning for Shopping List (Future Enhancement)
+- Scan product barcodes to add items to shopping list
+- Quick entry while shopping or checking pantry
+- API integration for product information (UPC database)
+- Store barcode with pantry items for quick re-ordering
+- Mobile-optimized camera interface
+- Fallback to manual entry if barcode not found
+
+**Overall MVP Completion: ~95%** 🚀
+- Phases 1-6: ✅ Complete
+- Phase 7: Significantly complete
+  - User Authentication: ✅ Complete
+  - Recipe Import: ✅ Complete
+  - Pantry Lifecycle: ✅ Complete (including leftover tracking)
+  - Insights Dashboard: ✅ Complete
+  - **Tech Debt Refactoring: ✅ Complete (All 3 major files)**
+  - **Food Category Grouping: ✅ Complete**
+  - **Delete Recipe: ✅ Complete**
+- **Remaining:** Security rules, privacy policy, PWA conversion
+- **Live at:** pantrywise.vercel.app & homeplate.cooking
+
+## Next Priority Tasks
+
+1. **📄 Privacy Policy & Terms (Phase 7.2.1)** - 2 hours
+   - Privacy Policy page (what data collected, how used)
+   - Terms of Service page
+   - Delete Account functionality (complete data removal)
+   - Data export functionality (GDPR compliance)
+   - Legal requirement, builds trust
+
+2. **🧪 Full Testing** - 1 hour
+   - Test all refactored components work correctly
+   - Verify shopping list food categories
+   - Test recipe delete with meal plan checking
+   - Test meal planner grid (140px slots, full day names)
+   - Verify security rules working (cross-user access blocked)
+   - Check for any bugs introduced during refactoring
+
+3. **📱 PWA Conversion (High Impact)** - 4-6 hours
+   - Make app installable on phones like a native app
+   - Works offline with cached data
+   - Home screen icon
+   - Splash screen
+   - See PWA_DEVELOPMENT_PLAN.md for complete plan
+
+4. **🎓 Welcome Tutorial (Phase 7.10)** - 2-3 hours
+   - First-time user onboarding
+   - Interactive walkthrough of features
+   - Sample data creation
+   - "Try it out" mode
+
+5. **✨ Easy Enhancements (2-3 hours total)**
+   - Recipe scaling (30 min)
+   - Ingredient search/filter (30 min)
+   - Favorite recipes (1 hour)
+   - Print shopping list (20 min)
+   - Export shopping list (15 min)
+   - **Manual shopping list additions (30 min) - NEW!**
 
 ---
 
-## 🐛 BUG TRACKER
+## Tech Debt - Large File Refactoring ✅ COMPLETED!
 
-### ✅ Fixed Bugs:
-- **Bug #1**: Pantry Match Percentage Not Displaying ✅
-- **Bug #2**: Missing Ingredients Display Incomplete ✅
-- **Bug #3**: Shopping List Not Combining Ingredients ✅
-- **Bug #4**: Singular/Plural Unit Mismatch ✅
-- **Bug #5**: No Partial Matches Shown ✅
-- **Bug #6**: Recipe URL Import Fails on Some Sites ✅
+**STATUS:** ✅ ALL REFACTORING COMPLETE (Oct 22, 2025)  
+**RESULT:** Professional, maintainable codebase achieved!  
+**TOTAL TIME:** ~8 hours for all three files  
 
-### 🎯 No Open Bugs!
+### **🎉 REFACTORING RESULTS:**
 
----
+| File | Before | After | Reduction | Components |
+|------|--------|-------|-----------|------------|
+| ShoppingList | 831 lines | 484 lines | 42% | 7 sub-components |
+| RecipeDetail | 1,229 lines | 388 lines | 68% | 8 sub-components |
+| MealPlanner | 682 lines | 526 lines | 23% | 4 sub-components |
+| **TOTAL** | **2,742 lines** | **1,398 lines** | **49%** | **19 sub-components** |
 
-## 🔧 TECHNICAL DEBT STATUS
+### **Sub-Components Created:**
 
-**Total Items**: 10 (See separate Technical Debt Tracker document for details)  
-**Completed**: 0  
-**High Priority**: 3 (TD-001, TD-008, TD-009)  
-**Critical Issue**: ShoppingListPage.jsx now 800+ lines (TD-009)
+**ShoppingList Components (7):**
+- ShoppingListStats.jsx (93 lines)
+- ShoppingListItem.jsx (139 lines)
+- AlreadyHaveItem.jsx (129 lines)
+- ShoppingListGroup.jsx (211 lines)
+- ShoppingListHeader.jsx (168 lines)
+- PantryTransferModal.jsx (310 lines)
+- FoodCategorySection.jsx (80 lines) - NEW: Food category grouping
 
----
+**RecipeDetail Components (8):**
+- RecipeHeader.jsx (70 lines)
+- RecipeStats.jsx (120 lines)
+- RecipeIngredientsList.jsx (105 lines)
+- RecipeInstructions.jsx (80 lines)
+- RecipeActions.jsx (85 lines)
+- AddToMealPlanModal.jsx (330 lines)
+- EditRecipeModal.jsx (290 lines)
+- Delete Recipe functionality with meal plan checking
 
-## 📋 IMMEDIATE NEXT STEPS
+**MealPlanner Components (4):**
+- MealSlot.jsx (172 lines)
+- MealPlanStats.jsx (176 lines)
+- MealPlanGrid.jsx (193 lines)
+- MealPlannerHeader.jsx (150 lines)
 
-### ✅ Completed:
-- ~~Complete Phase 6.1 (Meal Plan Management)~~ ✅ Done Oct 20, 2025
+### **Benefits Achieved:**
 
-### 🚧 Currently Working On:
-**Phase 7.5.1 - Shopping List → Pantry Transfer**
-- Claude Code is implementing this feature
-- Will allow automatic transfer of purchased items to pantry
-- Smart quantity merging for existing items
-
-### 📝 Next in Queue:
-1. **Test mobile responsiveness** (Phase 6 completion)
-2. **Deploy to Vercel/Netlify** (Phase 6 completion)  
-3. **Phase 7.5.2** - Recipe Completion → Pantry Deduction
-4. **TD-008** - Refactor 833-line function (Critical tech debt)
-
----
-
-## 🚀 LAUNCH CHECKLIST
-
-### Before Launch:
-- ✅ Complete Phase 6.1 (meal plan saves)
-- ⬜ Fix "check console" message (minor)
-- ⬜ Test mobile responsive
-- ⬜ Deploy to Vercel
-- ⬜ Test with 5-10 beta users
-
-### MVP Success Criteria:
-- ✅ Users can browse and search recipes
-- ✅ Users can manually add new recipes
-- ✅ Users can plan a full week of meals
-- ✅ Users see which recipes share ingredients
-- ✅ Users see a consolidated shopping list
-- ✅ Users see how much they're saving
-- ✅ Data persists between sessions
-- ✅ Users can save/load multiple meal plans
-- ✅ Mobile-friendly design (assumed, needs testing)
-- ⬜ Deployed and accessible online
+✅ **Maintainability:** Each component has single responsibility  
+✅ **Debuggability:** Smaller files = easier to debug  
+✅ **Reusability:** Components can be used elsewhere  
+✅ **Readability:** Comprehensive comments for non-technical understanding  
+✅ **Scalability:** Easy to add features (modify only relevant component)  
+✅ **Testing:** Can test individual components in isolation  
+✅ **Collaboration:** Team members can work on different components  
+✅ **Best Practices:** Follows React component architecture patterns  
 
 ---
 
-## 📈 PROGRESS SUMMARY
+### **Previous Tech Debt Documentation:**
 
-**Last Updated**: October 20, 2025 (Evening)
+**📋 COMPLETE DOCUMENTATION:**
+- **All 3 Refactoring Prompts:** `TECH_DEBT_REFACTORING_PROMPTS.md` (in outputs folder)
+- **ShoppingList Details:** See below
+- **RecipeDetail Details:** `RECIPEDETAIL_REFACTORING_PLAN.md` (in outputs folder)
+- **MealPlanner Details:** `MEALPLANNER_REFACTORING_PLAN.md` (in outputs folder)
 
-- **Phases 1-5**: 100% Complete ✅
-- **Phase 6**: 95% Complete ✅ (just needs mobile test & deployment)
-- **Phase 7**: 3.5/11 features complete (32%) - 7.5.1 in progress
-- **Bugs**: 0 remaining ✅
-- **Technical Debt**: 0/7 addressed ⚠️
-- **Overall MVP**: ~95% Complete
+---
 
-**Estimated Hours to Full MVP Launch**: 2-3 hours
-- Test mobile: 30 minutes
-- Deploy to Vercel: 1-2 hours
-- Final testing: 30 minutes
+### **✅ ALL REFACTORING COMPLETED (Oct 22, 2025):**
 
-**Currently Active Development**: Phase 7.5.1 (Shopping → Pantry Transfer)
+**1. ShoppingList.jsx** ✅ COMPLETED
+- **Before:** 831 lines (too large)
+- **After:** 484 lines coordinator + 7 sub-components
+- **Components:** ShoppingListStats, ShoppingListItem, AlreadyHaveItem, ShoppingListGroup, ShoppingListHeader, PantryTransferModal, FoodCategorySection
+- **Bonus:** Added food category grouping (grocery store organization)
+
+**2. RecipeDetail.jsx** ✅ COMPLETED  
+- **Before:** 1,229 lines (CRITICAL)
+- **After:** 388 lines coordinator + 8 sub-components
+- **Components:** RecipeHeader, RecipeStats, RecipeIngredientsList, RecipeInstructions, RecipeActions, AddToMealPlanModal, EditRecipeModal, Delete functionality
+- **Bonus:** Added delete recipe with smart meal plan checking
+
+**3. MealPlannerCalendar.jsx** ✅ COMPLETED
+- **Before:** 682 lines (too large)  
+- **After:** 526 lines coordinator + 4 sub-components
+- **Components:** MealSlot, MealPlanStats, MealPlanGrid, MealPlannerHeader
+- **Features:** Fixed 140px slot height, full day names, responsive grid
+
+---
+
+### **ORIGINAL Refactoring Plans (for reference):**
+
+**Problem:**
+- Largest file in the project
+- Single file handling too many responsibilities
+- Very hard to maintain and debug
+- Difficult to find specific functionality
+- Significantly slows down development
+- More complex than MealPlanner (pantry integration, grouping, cost calculations)
+
+**Refactoring Plan:**
+Break ShoppingList.jsx into smaller, focused components:
+
+1. **ShoppingList.jsx** (150 lines) - Main container & state management
+   - Overall layout
+   - State management (shopping list, pantry items)
+   - Context integration
+   - Coordinate child components
+
+2. **ShoppingListHeader.jsx** (100 lines) - Top section
+   - Total cost display
+   - Generate from meal plan button
+   - Cost savings banner
+   - Filter/sort controls
+
+3. **ShoppingListStats.jsx** (80 lines) - Statistics card
+   - Total items count
+   - Total cost
+   - Items already in pantry
+   - Potential savings
+
+4. **ShoppingListGroup.jsx** (120 lines) - Category grouping
+   - Group items by category (produce, dairy, etc.)
+   - Collapsible sections
+   - Category headers with counts
+
+5. **ShoppingListItem.jsx** (100 lines) - Individual item
+   - Checkbox for purchased
+   - Item name, quantity, unit
+   - Cost display
+   - Already in pantry indicator
+   - Add to pantry button
+   - Delete button
+
+6. **ShoppingListActions.jsx** (80 lines) - Action buttons
+   - Clear All button
+   - Add to Pantry (all checked items)
+   - Export/Print list
+   - Share list
+
+7. **PantryTransferModal.jsx** (100 lines) - Transfer to pantry
+   - Modal for moving items to pantry
+   - Batch transfer logic
+   - Confirmation
+
+**Benefits After Refactoring:**
+- ✅ Each file under 150 lines
+- ✅ Much easier to maintain
+- ✅ Faster to find and fix bugs
+- ✅ Clear separation of pantry logic
+- ✅ Easier to add features (barcode scanning, etc.)
+
+**When to Do This:**
+- AFTER security rules and launch
+- BEFORE MealPlanner refactoring (higher priority due to size)
+- When you have 4-5 hours available
+
+---
+
+**2. RecipeDetail.jsx - 1000+ lines** 🚨 CRITICAL PRIORITY #2
+- **Status:** Needs immediate refactoring
+- **Current Size:** 1000+ lines (should be <200)
+- **Priority:** Critical (second worst file)
+- **Time Estimate:** 4-5 hours
+- **Difficulty:** High (7/10)
+
+**Problem:**
+- Over 1000 lines in a single file
+- Handles recipe display, editing, adding to meal plan
+- Very difficult to find specific code
+- Hard to debug and maintain
+- Every new feature makes it worse
+
+**Refactoring Plan:**
+Break RecipeDetail.jsx into focused components:
+
+1. **RecipeDetail.jsx** (150 lines) - Main container & orchestrator
+   - Load recipe data from Firestore
+   - Overall state management
+   - Coordinate all child components
+   - Handle navigation
+
+2. **RecipeHeader.jsx** (100 lines) - Top section
+   - Recipe name and description
+   - Hero image
+   - Rating display (if implemented)
+   - Quick stats bar (cook time, servings, cost)
+
+3. **RecipeStats.jsx** (80 lines) - Stats card
+   - Cook time display
+   - Servings count
+   - Cost per serving
+   - Total ingredients count
+   - Styled card with icons
+
+4. **RecipeIngredientsList.jsx** (120 lines) - Ingredients section
+   - List all ingredients with amounts
+   - Show pantry match indicators
+   - Checkboxes for checked-off ingredients
+   - Highlight missing ingredients
+   - Group by category (optional)
+
+5. **RecipeInstructions.jsx** (100 lines) - Instructions section
+   - Step-by-step instructions display
+   - Numbered or bulleted format
+   - Clear formatting and spacing
+
+6. **RecipeActions.jsx** (120 lines) - Action buttons section
+   - Add to Meal Plan button (opens modal)
+   - Edit Recipe button (opens modal)
+   - Delete Recipe button (with confirmation)
+   - Share button (future)
+   - Print button (future)
+
+7. **AddToMealPlanModal.jsx** (150 lines) - Separate modal component
+   - Meal plan selection (current or saved)
+   - Day selection (Monday-Sunday)
+   - Meal selection (Breakfast/Lunch/Dinner)
+   - Add to plan logic
+
+8. **EditRecipeModal.jsx** (180 lines) - Separate modal component
+   - Edit all recipe fields
+   - Ingredient editing
+   - Instruction editing
+   - Save to Firestore
+   - Validation
+
+**Benefits After Refactoring:**
+- ✅ Each component under 180 lines
+- ✅ Clear separation of concerns
+- ✅ Easy to find and modify specific features
+- ✅ Simpler to test individual parts
+- ✅ Much easier to add new features
+- ✅ Professional, maintainable code
+
+**When to Do:**
+- RIGHT NOW (after ShoppingList refactoring)
+- Before adding any new recipe features
+- Critical for long-term maintainability
+
+---
+
+**3. MealPlanner.jsx - 600+ lines** 🚨 HIGH PRIORITY #3
+- **Status:** Too large, needs refactoring
+- **Current Size:** 600+ lines (should be <200)
+- **Priority:** High (after security rules and launch)
+- **Time Estimate:** 3-4 hours
+- **Difficulty:** Medium (5/10)
+
+**Problem:**
+- Single file handling too many responsibilities
+- Hard to maintain and debug
+- Difficult to find specific functionality
+- Slows down development
+
+**Refactoring Plan:**
+Break MealPlanner.jsx into smaller, focused components:
+
+1. **MealPlanner.jsx** (150 lines) - Main container & state management
+   - Overall layout
+   - State management (meal plan, leftovers)
+   - Context integration
+   - Coordinate child components
+
+2. **MealPlannerHeader.jsx** (100 lines) - Top section components
+   - Smart Ingredient Sharing banner
+   - Leftovers collapsible widget
+   - Save Current Plan section (integrated into stats card)
+
+3. **MealPlanStats.jsx** (80 lines) - Statistics card
+   - Weekly cost display
+   - Meals planned counter
+   - Save plan input and button
+   - Gradient card styling
+
+4. **MealPlanGrid.jsx** (150 lines) - Calendar grid structure
+   - 7-day x 3-meal grid layout
+   - Day/meal labels
+   - Grid styling and responsiveness
+   - Pass data to individual cells
+
+5. **MealSlot.jsx** (100 lines) - Individual meal cell
+   - Empty state (+ icon)
+   - Filled state (recipe card)
+   - Click handlers
+   - Drag and drop (if implemented)
+
+6. **RecipeSelectionModal.jsx** (100 lines) - Recipe picker modal
+   - Modal overlay
+   - Recipe list/search
+   - Selection logic
+   - Add to meal slot
+
+**Benefits After Refactoring:**
+- ✅ Each file under 200 lines
+- ✅ Clear separation of concerns
+- ✅ Easier to test individual components
+- ✅ Faster to find and fix bugs
+- ✅ More maintainable long-term
+- ✅ Easier for other developers to understand
+
+**Implementation Steps:**
+1. Create new component files (6 total)
+2. Extract logic from MealPlanner.jsx
+3. Move state management to appropriate levels
+4. Ensure props are passed correctly
+5. Test all functionality still works
+6. Delete redundant code from original file
+7. Update imports in parent components
+
+**When to Do This:**
+- After security rules implemented
+- After public launch
+- AFTER ShoppingList refactoring (lower priority)
+- Before adding major new features
+- Estimated: 3-4 hours with Claude Code
+
+---
+
+**Refactoring Priority Order:**
+1. 🚨 **ShoppingList.jsx** (800+ lines) - Do FIRST
+2. 🚨 **MealPlanner.jsx** (600+ lines) - Do SECOND
+3. ⚠️ **Other files** - Monitor as they grow
+
+**Other Files to Monitor:**
+- RecipeLibrary.jsx - Check line count
+- Pantry.jsx - Check line count  
+- App.jsx - May need refactoring if routes grow
+
+**Refactoring Guidelines:**
+- Keep components under 200 lines
+- One responsibility per component
+- Extract reusable UI into separate files
+- Move complex logic to utility functions
+- Use custom hooks for shared state logic
+
+## Today's Accomplishments (Oct 22, 2025)
+
+🎉 **HISTORIC DAY - ALL TECH DEBT CLEARED + SECURITY IMPLEMENTED!**
+
+### Major Refactoring Completed:
+- ✅ **ShoppingList.jsx** (831 → 484 lines, 7 sub-components)
+- ✅ **RecipeDetail.jsx** (1,229 → 388 lines, 8 sub-components)  
+- ✅ **MealPlannerCalendar.jsx** (682 → 526 lines, 4 sub-components)
+- ✅ **Total: 2,742 → 1,398 lines (49% reduction!)**
+
+### Features Added:
+- ✅ Food category grouping in shopping list (grocery store organization)
+- ✅ Delete recipe button with smart meal plan checking
+- ✅ 19 new sub-components created
+- ✅ Professional, maintainable codebase achieved
+
+### Security Implemented:
+- ✅ **Firebase Security Rules deployed**
+- ✅ Users can only access their own data
+- ✅ Cross-user access blocked
+- ✅ Privacy protection enforced
+- ✅ Ready for public promotion
+
+### Previous Accomplishments (Oct 20, 2025)
+- ✅ Fixed 3 critical bugs (pantry, cooking history, UI)
+- ✅ Added cooking history with 5-star ratings
+- ✅ Deployed to Vercel as pantrywise.vercel.app
+- ✅ Implemented complete user authentication
+- ✅ Made each user's data private
+
+## Today's Accomplishments (Oct 21, 2025)
+
+- ✅ Fixed new user onboarding bugs (empty states for all pages)
+- ✅ Added Recipe Library empty state with two options:
+  - Import Recipe from URL (primary method)
+  - Load 25 Sample Recipes (alternative)
+- ✅ Added empty states for Pantry, Shopping List, and Meal Planner
+- ✅ Set up GitHub repository: https://github.com/lpingry35/pantrywise
+- ✅ Connected GitHub to Vercel for automatic deployments
+- ✅ Established professional Git workflow
+- ✅ All new users now have clean, empty accounts with helpful onboarding
+- ✅ Added Manual Pantry Editing feature
+  - Edit button on each pantry item
+  - Update quantities, units, and ingredient names
+  - Modal with pre-filled values for easy corrections
+- ✅ Created Insights page (Kitchen statistics dashboard)
+  - Recipe library, cooking history, and pantry stats
+  - Empty states for new users
+  - Gradient cards with color-coded sections
+- ✅ Implemented Leftover Tracking feature
+  - Mark leftovers when cooking (servings + expiration)
+  - Collapsible widget in Meal Planner
+  - Warning for items expiring within 2 days
+  - Full display in Insights page
+  - User preference remembered with localStorage
+- ✅ Created PWA Development Plan document
+  - Complete roadmap for converting to installable phone app
+  - Step-by-step phases with time estimates
+  - Cost breakdown ($0-50 total)
+  - Ready to implement after launch
+
+## Launch Checklist
+
+✅ Core features working
+✅ Firebase configured
+✅ Deployed to production
+✅ All bugs fixed
+✅ User accounts implemented
+✅ GitHub version control set up
+✅ Automatic deployments configured
+✅ New user onboarding with empty states
+✅ Insights page with statistics
+✅ Leftover tracking feature
+✅ **Tech debt cleared (all 3 major files refactored - Oct 22, 2025)**
+✅ **Food category grouping in shopping list (Oct 22, 2025)**
+✅ **Delete recipe with meal plan checking (Oct 22, 2025)**
+✅ **Security rules configured (Oct 22, 2025) - CRITICAL COMPLETE!**
+⬜ Privacy policy added
+⬜ Terms of Service added
+⬜ Delete account functionality
+⬜ Welcome tutorial for new users (RECOMMENDED)
+⬜ Full testing after security implementation
+⬜ Beta testing completed
+⬜ PWA conversion (OPTIONAL - makes app installable on phones)
+⬜ Beta testing completed
+⬜ PWA conversion (OPTIONAL - makes app installable on phones)

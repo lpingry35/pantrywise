@@ -20,10 +20,10 @@
  *    - Edit units if needed
  *    - Skip items they didn't buy (checkbox)
  *    - Quick reset all to recipe amounts
- * 4. User chooses:
- *    - Transfer & Keep List (items stay on shopping list)
- *    - Transfer & Clear List (items removed, meal plan cleared)
+ * 4. User clicks "Transfer to Pantry"
  * 5. Items are added to pantry with actual purchased amounts
+ * 6. Meal plan stays intact (always)
+ * 7. Shopping list items recategorize to "Already Have" section
  *
  * FEATURES:
  * - Pre-filled with recipe amounts (can be overridden)
@@ -255,42 +255,40 @@ function PantryTransferModal({
         {/* ===================================================================
             ACTION BUTTONS
             ===================================================================
-            Three options for completing the transfer:
-            1. Transfer & Keep List (items stay for future reference)
-            2. Transfer & Clear List (cleans up meal plan)
-            3. Cancel (closes modal without changes)
+            Simple two-button interface:
+
+            1. Transfer to Pantry (Green Button)
+               - Adds all items to pantry
+               - Meal plan stays intact
+               - Shopping list items recategorize to "Already Have" (green)
+               - You can still see what to cook for the week!
+
+            2. Cancel (Gray Button)
+               - Closes modal without making any changes
+
+            NOTE: To clear your meal plan when you're done with the week,
+            use the "Clear All" button on the Meal Planner page.
         */}
         <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-2xl">
           <div className="grid grid-cols-1 gap-3">
 
-            {/* Transfer and Keep List Button */}
+            {/* Transfer to Pantry Button (Primary Action) */}
             <button
               onClick={() => onTransfer(false)}
               disabled={transferring}
-              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 px-4 rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 transition-all font-bold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+              className="w-full bg-gradient-to-r from-green-600 to-emerald-600 text-white py-4 px-6 rounded-lg hover:from-green-700 hover:to-emerald-700 disabled:from-gray-300 disabled:to-gray-400 transition-all font-bold text-lg shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
               </svg>
-              {transferring ? 'Transferring...' : 'Transfer to Pantry & Keep List'}
+              {transferring ? 'Transferring...' : 'Transfer to Pantry'}
             </button>
 
-            {/* Transfer and Clear List Button */}
-            <button
-              onClick={() => onTransfer(true)}
-              disabled={transferring}
-              className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 transition-all font-medium shadow-md hover:shadow-lg flex items-center justify-center gap-2"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                />
-              </svg>
-              {transferring ? 'Transferring...' : 'Transfer to Pantry & Clear List'}
-            </button>
+            <div className="text-center text-sm text-gray-600 py-2">
+              <p>✅ Items will be added to your pantry</p>
+              <p>✅ Your meal plan will stay on the calendar</p>
+              <p>✅ Items will show as "Already Have" in green</p>
+            </div>
 
             {/* Cancel Button */}
             <button

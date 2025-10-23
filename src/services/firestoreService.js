@@ -762,6 +762,179 @@ export async function getPantryItems() {
   }
 }
 
+/**
+ * Transfer shopping list items to pantry with sequential writes (NO RACE CONDITIONS)
+ * Each item is saved individually to prevent race conditions and ensure reliability.
+ *
+ * @param {Array} items - Array of items to transfer (from shopping list)
+ * @returns {Promise<Object>} - Results object with success/failed/skipped counts
+ */
+export async function transferItemsToPantry(items) {
+  console.log('🔍 === TRANSFER TO PANTRY (SEQUENTIAL) ===');
+  console.log(`Starting transfer of ${items.length} items`);
+
+  if (!items || items.length === 0) {
+    throw new Error('No items to transfer');
+  }
+
+  const results = {
+    success: [],
+    failed: [],
+    skipped: []
+  };
+
+  // SEQUENTIAL PROCESSING - One item at a time
+  for (let i = 0; i < items.length; i++) {
+    const item = items[i];
+
+    try {
+      // VALIDATE ITEM
+      if (!item.name || typeof item.name !== 'string' || item.name.trim() === '') {
+        console.warn(`⚠️ [${i + 1}/${items.length}] Skipping item - no valid name:`, item);
+        results.skipped.push({ item, reason: 'No valid name' });
+        continue;
+      }
+
+      if (item.quantity === undefined || item.quantity === null || isNaN(parseFloat(item.quantity))) {
+        console.warn(`⚠️ [${i + 1}/${items.length}] Skipping ${item.name} - invalid quantity:`, item.quantity);
+        results.skipped.push({ item, reason: 'Invalid quantity' });
+        continue;
+      }
+
+      console.log(`📦 [${i + 1}/${items.length}] Transferring: "${item.name}" (${item.quantity} ${item.unit || 'unit'})`);
+
+      // Guest mode: Add to localStorage pantry
+      if (isGuestMode()) {
+        const currentPantry = getGuestPantry();
+
+        // Check if item already exists (merge quantities)
+        const existingIndex = currentPantry.findIndex(p =>
+          p.name.toLowerCase().trim() === item.name.toLowerCase().trim()
+        );
+
+        if (existingIndex !== -1) {
+          // Merge with existing item
+          const existing = currentPantry[existingIndex];
+          if (existing.unit === item.unit) {
+            currentPantry[existingIndex] = {
+              ...existing,
+              quantity: parseFloat(existing.quantity) + parseFloat(item.quantity)
+            };
+          } else {
+            // Different units - add as separate item
+            currentPantry.push({
+              id: `pantry_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`,
+              name: item.name.trim(),
+              quantity: parseFloat(item.quantity),
+              unit: item.unit || 'unit'
+            });
+          }
+        } else {
+          // Add as new item
+          currentPantry.push({
+            id: `pantry_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`,
+            name: item.name.trim(),
+            quantity: parseFloat(item.quantity),
+            unit: item.unit || 'unit'
+          });
+        }
+
+        setGuestPantry(currentPantry);
+        console.log(`✅ [${i + 1}/${items.length}] Successfully saved to guest pantry: "${item.name}"`);
+        results.success.push({ name: item.name, quantity: item.quantity, unit: item.unit });
+      } else {
+        // Regular user: Load current pantry, merge, and save back
+        const pantryRef = getUserDoc('pantryItems', 'current');
+        const pantryDoc = await getDoc(pantryRef);
+
+        let currentPantryItems = [];
+        if (pantryDoc.exists()) {
+          currentPantryItems = pantryDoc.data().items || [];
+        }
+
+        // Check if item already exists (merge quantities)
+        const existingIndex = currentPantryItems.findIndex(p =>
+          p.name.toLowerCase().trim() === item.name.toLowerCase().trim()
+        );
+
+        if (existingIndex !== -1) {
+          // Merge with existing item
+          const existing = currentPantryItems[existingIndex];
+          if (existing.unit === item.unit) {
+            currentPantryItems[existingIndex] = {
+              ...existing,
+              quantity: parseFloat(existing.quantity) + parseFloat(item.quantity)
+            };
+          } else {
+            // Different units - add as separate item
+            currentPantryItems.push({
+              name: item.name.trim(),
+              quantity: parseFloat(item.quantity),
+              unit: item.unit || 'unit'
+            });
+          }
+        } else {
+          // Add as new item
+          currentPantryItems.push({
+            name: item.name.trim(),
+            quantity: parseFloat(item.quantity),
+            unit: item.unit || 'unit'
+          });
+        }
+
+        // SAVE BACK TO FIRESTORE (with await - sequential!)
+        await setDoc(pantryRef, {
+          items: currentPantryItems,
+          updatedAt: serverTimestamp()
+        });
+
+        console.log(`✅ [${i + 1}/${items.length}] Successfully saved: "${item.name}"`);
+        results.success.push({ name: item.name, quantity: item.quantity, unit: item.unit });
+      }
+
+      // Small delay to prevent overwhelming Firestore (optional but safe)
+      if (i < items.length - 1 && !isGuestMode()) {
+        await new Promise(resolve => setTimeout(resolve, 50)); // 50ms delay between Firestore writes
+      }
+
+    } catch (error) {
+      console.error(`❌ [${i + 1}/${items.length}] FAILED to transfer "${item.name}":`, error);
+      console.error('Error details:', {
+        message: error.message,
+        code: error.code,
+        item: item
+      });
+      results.failed.push({ item, error: error.message });
+
+      // Continue with next item instead of stopping
+    }
+  }
+
+  // FINAL SUMMARY
+  console.log('📊 === TRANSFER SUMMARY ===');
+  console.log(`  ✅ Success: ${results.success.length}/${items.length}`);
+  console.log(`  ❌ Failed: ${results.failed.length}/${items.length}`);
+  console.log(`  ⚠️  Skipped: ${results.skipped.length}/${items.length}`);
+
+  if (results.failed.length > 0) {
+    console.error('❌ Failed items:', results.failed.map(f => f.item.name));
+  }
+
+  if (results.skipped.length > 0) {
+    console.warn('⚠️  Skipped items:', results.skipped.map(s => s.item.name || 'unnamed'));
+  }
+
+  // Return results for UI feedback
+  return {
+    success: results.success.length,
+    failed: results.failed.length,
+    skipped: results.skipped.length,
+    total: items.length,
+    failedItems: results.failed,
+    skippedItems: results.skipped
+  };
+}
+
 // ============================================================================
 // COOKING HISTORY (Phase 7.5.2 - Recipe Completion Tracking with Ratings)
 // ============================================================================
@@ -1100,6 +1273,200 @@ export async function getLeftovers() {
 }
 
 // ============================================================================
+// SHOPPING LIST COLLECTION
+// ============================================================================
+
+/**
+ * Get all shopping list items from Firestore or localStorage (guest mode)
+ * @returns {Promise<Array>} - Array of shopping list item objects
+ */
+export async function getShoppingListItems() {
+  try {
+    // Guest mode: load from localStorage
+    if (isGuestMode()) {
+      const stored = localStorage.getItem('guestShoppingList');
+      if (stored) {
+        const items = JSON.parse(stored);
+        console.log('👤 getShoppingListItems: Guest mode - loaded', items.length, 'items');
+        return items;
+      }
+      console.log('👤 getShoppingListItems: Guest mode - no items found');
+      return [];
+    }
+
+    // Regular user: load from Firestore
+    const shoppingListRef = getUserCollection('currentShoppingList');
+    const querySnapshot = await getDocs(shoppingListRef);
+
+    const items = [];
+    querySnapshot.forEach((doc) => {
+      items.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    console.log(`📋 Loaded ${items.length} shopping list items from Firestore`);
+    return items;
+  } catch (error) {
+    console.error('Error getting shopping list items:', error);
+    throw new Error(`Failed to get shopping list items: ${error.message}`);
+  }
+}
+
+/**
+ * Save shopping list items to Firestore or localStorage (guest mode)
+ * Replaces all existing recipe-sourced items with new ones
+ * @param {Array} items - Array of shopping list item objects
+ */
+export async function saveShoppingListItems(items) {
+  try {
+    // Guest mode: save to localStorage
+    if (isGuestMode()) {
+      localStorage.setItem('guestShoppingList', JSON.stringify(items));
+      console.log('👤 saveShoppingListItems: Guest mode - saved', items.length, 'items');
+      console.log('⚠️ Guest data will be lost when you exit. Create an account to save permanently!');
+      return;
+    }
+
+    // Regular user: save to Firestore
+    // First, delete all existing recipe-sourced items
+    const shoppingListRef = getUserCollection('currentShoppingList');
+    const existingSnapshot = await getDocs(shoppingListRef);
+
+    const deletePromises = existingSnapshot.docs
+      .filter(doc => doc.data().source === 'recipe')
+      .map(doc => deleteDoc(doc.ref));
+
+    await Promise.all(deletePromises);
+
+    // Then add all new items
+    const addPromises = items.map(item => {
+      const itemRef = getUserDoc('currentShoppingList', item.id);
+      return setDoc(itemRef, {
+        ...item,
+        source: 'recipe',
+        addedAt: serverTimestamp()
+      });
+    });
+
+    await Promise.all(addPromises);
+    console.log(`✅ Saved ${items.length} shopping list items to Firestore`);
+  } catch (error) {
+    console.error('Error saving shopping list items:', error);
+    throw new Error(`Failed to save shopping list items: ${error.message}`);
+  }
+}
+
+/**
+ * Add a single manual item to shopping list
+ * @param {Object} item - Shopping list item object
+ */
+export async function addShoppingListItem(item) {
+  try {
+    // Guest mode: add to localStorage
+    if (isGuestMode()) {
+      const existing = JSON.parse(localStorage.getItem('guestShoppingList') || '[]');
+      existing.push(item);
+      localStorage.setItem('guestShoppingList', JSON.stringify(existing));
+      console.log('👤 addShoppingListItem: Guest mode - added item');
+      return;
+    }
+
+    // Regular user: add to Firestore
+    const itemRef = getUserDoc('currentShoppingList', item.id);
+    await setDoc(itemRef, {
+      ...item,
+      addedAt: serverTimestamp()
+    });
+    console.log(`✅ Added item to shopping list: ${item.name}`);
+  } catch (error) {
+    console.error('Error adding shopping list item:', error);
+    throw new Error(`Failed to add shopping list item: ${error.message}`);
+  }
+}
+
+/**
+ * Update a shopping list item
+ * @param {string} itemId - Item ID
+ * @param {Object} updates - Fields to update
+ */
+export async function updateShoppingListItem(itemId, updates) {
+  try {
+    // Guest mode: update in localStorage
+    if (isGuestMode()) {
+      const existing = JSON.parse(localStorage.getItem('guestShoppingList') || '[]');
+      const index = existing.findIndex(item => item.id === itemId);
+      if (index !== -1) {
+        existing[index] = { ...existing[index], ...updates };
+        localStorage.setItem('guestShoppingList', JSON.stringify(existing));
+        console.log('👤 updateShoppingListItem: Guest mode - updated item');
+      }
+      return;
+    }
+
+    // Regular user: update in Firestore
+    const itemRef = getUserDoc('currentShoppingList', itemId);
+    await updateDoc(itemRef, updates);
+    console.log(`✅ Updated shopping list item: ${itemId}`);
+  } catch (error) {
+    console.error('Error updating shopping list item:', error);
+    throw new Error(`Failed to update shopping list item: ${error.message}`);
+  }
+}
+
+/**
+ * Delete a shopping list item
+ * @param {string} itemId - Item ID
+ */
+export async function deleteShoppingListItem(itemId) {
+  try {
+    // Guest mode: delete from localStorage
+    if (isGuestMode()) {
+      const existing = JSON.parse(localStorage.getItem('guestShoppingList') || '[]');
+      const filtered = existing.filter(item => item.id !== itemId);
+      localStorage.setItem('guestShoppingList', JSON.stringify(filtered));
+      console.log('👤 deleteShoppingListItem: Guest mode - deleted item');
+      return;
+    }
+
+    // Regular user: delete from Firestore
+    const itemRef = getUserDoc('currentShoppingList', itemId);
+    await deleteDoc(itemRef);
+    console.log(`✅ Deleted shopping list item: ${itemId}`);
+  } catch (error) {
+    console.error('Error deleting shopping list item:', error);
+    throw new Error(`Failed to delete shopping list item: ${error.message}`);
+  }
+}
+
+/**
+ * Clear all shopping list items
+ */
+export async function clearShoppingList() {
+  try {
+    // Guest mode: clear localStorage
+    if (isGuestMode()) {
+      localStorage.setItem('guestShoppingList', JSON.stringify([]));
+      console.log('👤 clearShoppingList: Guest mode - cleared all items');
+      return;
+    }
+
+    // Regular user: delete all from Firestore
+    const shoppingListRef = getUserCollection('currentShoppingList');
+    const snapshot = await getDocs(shoppingListRef);
+
+    const deletePromises = snapshot.docs.map(doc => deleteDoc(doc.ref));
+    await Promise.all(deletePromises);
+
+    console.log('🗑️ Shopping list cleared');
+  } catch (error) {
+    console.error('Error clearing shopping list:', error);
+    throw new Error(`Failed to clear shopping list: ${error.message}`);
+  }
+}
+
+// ============================================================================
 // UTILITY FUNCTIONS
 // ============================================================================
 
@@ -1143,6 +1510,14 @@ const firestoreService = {
   // Pantry Items
   savePantryItems,
   getPantryItems,
+
+  // Shopping List
+  getShoppingListItems,
+  saveShoppingListItems,
+  addShoppingListItem,
+  updateShoppingListItem,
+  deleteShoppingListItem,
+  clearShoppingList,
 
   // Cooking History (Phase 7.5.2)
   saveCookingHistory,

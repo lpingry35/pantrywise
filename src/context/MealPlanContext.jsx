@@ -134,8 +134,9 @@ export function MealPlanProvider({ children }) {
   // Auto-save meal plan to Firestore whenever it changes
   useEffect(() => {
     if (!loading) {
+      console.log('💾 Auto-saving meal plan to Firestore...');
       saveMealPlan(mealPlan).catch(error => {
-        console.error('Error auto-saving meal plan:', error);
+        console.error('❌ Error auto-saving meal plan:', error);
       });
     }
   }, [mealPlan, loading]);
@@ -151,6 +152,7 @@ export function MealPlanProvider({ children }) {
 
   // Add recipe to a specific meal slot
   const addRecipeToSlot = (day, meal, recipe) => {
+    console.log(`📅 Adding "${recipe.name}" to ${day} ${meal}`);
     setMealPlan(prev => ({
       ...prev,
       [day]: {
@@ -173,6 +175,7 @@ export function MealPlanProvider({ children }) {
 
   // Clear all meals from the plan
   const clearMealPlan = () => {
+    console.log('🗑️ CLEARING MEAL PLAN - All recipes will be removed from calendar');
     setMealPlan(initialMealPlan);
   };
 

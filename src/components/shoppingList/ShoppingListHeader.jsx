@@ -1,4 +1,4 @@
-import { ShoppingCart } from 'lucide-react';
+import { RefreshCw, Trash2 } from 'lucide-react';
 
 /**
  * ============================================================================
@@ -30,6 +30,10 @@ import { ShoppingCart } from 'lucide-react';
  * @param {boolean} transferring - Whether transfer is in progress
  * @param {boolean} hasItemsToTransfer - Whether there are items that can be transferred
  * @param {function} onExport - Function to export shopping list
+ * @param {function} onGenerate - Function to generate shopping list from meal plan
+ * @param {boolean} generating - Whether generation is in progress
+ * @param {function} onClear - Function to clear shopping list
+ * @param {boolean} hasItems - Whether shopping list has any items
  */
 
 function ShoppingListHeader({
@@ -40,7 +44,11 @@ function ShoppingListHeader({
   onOpenTransferDialog,
   transferring,
   hasItemsToTransfer,
-  onExport
+  onExport,
+  onGenerate,
+  generating,
+  onClear,
+  hasItems
 }) {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -90,6 +98,44 @@ function ShoppingListHeader({
             </button>
           </div>
         )}
+
+        {/* =================================================================
+            GENERATE & CLEAR BUTTONS ROW
+            =================================================================
+            Shopping list management actions:
+            1. Generate from Meal Plan - Creates new shopping list
+            2. Clear Shopping List - Removes all items
+        */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+
+          {/* ===============================================================
+              GENERATE FROM MEAL PLAN BUTTON
+              ===============================================================
+              Computes shopping list from current meal plan and saves to Firestore
+          */}
+          <button
+            onClick={onGenerate}
+            disabled={generating}
+            className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 px-4 rounded-lg hover:from-blue-700 hover:to-indigo-700 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-bold shadow-lg hover:shadow-xl flex items-center justify-center gap-2"
+          >
+            <RefreshCw className={`w-5 h-5 ${generating ? 'animate-spin' : ''}`} />
+            {generating ? 'Generating...' : 'Generate from Meal Plan'}
+          </button>
+
+          {/* ===============================================================
+              CLEAR SHOPPING LIST BUTTON
+              ===============================================================
+              Clears all items from shopping list (meal plan stays intact)
+          */}
+          <button
+            onClick={onClear}
+            disabled={!hasItems}
+            className="bg-gradient-to-r from-red-600 to-red-700 text-white py-3 px-4 rounded-lg hover:from-red-700 hover:to-red-800 disabled:from-gray-300 disabled:to-gray-400 disabled:cursor-not-allowed transition-all font-medium shadow-md hover:shadow-lg flex items-center justify-center gap-2"
+          >
+            <Trash2 className="w-5 h-5" />
+            Clear Shopping List
+          </button>
+        </div>
 
         {/* =================================================================
             ACTION BUTTONS ROW
