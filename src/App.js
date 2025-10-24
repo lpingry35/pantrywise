@@ -1,7 +1,8 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { MealPlanProvider } from './context/MealPlanContext';
-import Navigation from './components/Navigation';
+import MobileNav from './components/layout/MobileNav';
+import DesktopNav from './components/layout/DesktopNav';
 import WelcomeTutorial from './components/WelcomeTutorial';
 import Home from './pages/Home';
 import RecipeLibrary from './pages/RecipeLibrary';
@@ -15,6 +16,27 @@ import FirebaseTest from './pages/FirebaseTest';
 import FirebaseDebug from './pages/FirebaseDebug';
 import Login from './pages/Login';
 import Signup from './pages/Signup';
+
+/**
+ * Responsive Navigation Component
+ * Shows MobileNav on screens < 768px (Tailwind 'md' breakpoint)
+ * Shows DesktopNav on screens >= 768px
+ */
+function ResponsiveNav() {
+  return (
+    <>
+      {/* Mobile Navigation - visible only on small screens */}
+      <div className="md:hidden">
+        <MobileNav />
+      </div>
+
+      {/* Desktop Navigation - visible only on medium+ screens */}
+      <div className="hidden md:block">
+        <DesktopNav />
+      </div>
+    </>
+  );
+}
 
 // Protected Route wrapper - redirects to login if not authenticated
 function ProtectedRoute({ children }) {
@@ -44,7 +66,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <Home />
                     </>
                   </ProtectedRoute>
@@ -55,7 +77,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <RecipeLibrary />
                     </>
                   </ProtectedRoute>
@@ -66,7 +88,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <AddRecipe />
                     </>
                   </ProtectedRoute>
@@ -77,7 +99,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <RecipeDetail />
                     </>
                   </ProtectedRoute>
@@ -88,7 +110,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <MyPantry />
                     </>
                   </ProtectedRoute>
@@ -99,7 +121,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <MealPlanner />
                     </>
                   </ProtectedRoute>
@@ -110,7 +132,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <ShoppingListPage />
                     </>
                   </ProtectedRoute>
@@ -121,7 +143,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <StatsAndInsights />
                     </>
                   </ProtectedRoute>
@@ -132,7 +154,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <FirebaseTest />
                     </>
                   </ProtectedRoute>
@@ -143,7 +165,7 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <>
-                      <Navigation />
+                      <ResponsiveNav />
                       <FirebaseDebug />
                     </>
                   </ProtectedRoute>
