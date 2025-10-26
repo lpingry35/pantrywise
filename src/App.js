@@ -4,6 +4,7 @@ import { MealPlanProvider } from './context/MealPlanContext';
 import MobileNav from './components/layout/MobileNav';
 import DesktopNav from './components/layout/DesktopNav';
 import WelcomeTutorial from './components/WelcomeTutorial';
+import InstallBanner from './components/InstallBanner';
 import Home from './pages/Home';
 import RecipeLibrary from './pages/RecipeLibrary';
 import RecipeDetail from './pages/RecipeDetail';
@@ -12,6 +13,7 @@ import MyPantry from './pages/MyPantry';
 import MealPlanner from './pages/MealPlanner';
 import ShoppingListPage from './pages/ShoppingListPage';
 import StatsAndInsights from './pages/StatsAndInsights';
+import InstallApp from './pages/InstallApp';
 import FirebaseTest from './pages/FirebaseTest';
 import FirebaseDebug from './pages/FirebaseDebug';
 import Login from './pages/Login';
@@ -150,6 +152,17 @@ function App() {
                 }
               />
               <Route
+                path="/install"
+                element={
+                  <ProtectedRoute>
+                    <>
+                      <ResponsiveNav />
+                      <InstallApp />
+                    </>
+                  </ProtectedRoute>
+                }
+              />
+              <Route
                 path="/firebase-test"
                 element={
                   <ProtectedRoute>
@@ -175,6 +188,9 @@ function App() {
 
             {/* Welcome Tutorial - Shows on first visit for new users and guest accounts */}
             <WelcomeTutorial />
+
+            {/* Install Banner - Prompts iOS users to install PWA */}
+            <InstallBanner />
           </div>
         </Router>
       </MealPlanProvider>

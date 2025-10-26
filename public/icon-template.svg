@@ -1,0 +1,24 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <!-- Gradient Background (Blue to Green) -->
+  <defs>
+    <linearGradient id="bg-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#3b82f6;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#10b981;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="100" fill="url(#bg-gradient)"/>
+
+  <!-- Simple Pan/Cooking Icon (White) -->
+  <g transform="translate(128, 128)" fill="white">
+    <!-- Pan handle -->
+    <rect x="200" y="115" width="80" height="15" rx="7" />
+    <!-- Pan body -->
+    <ellipse cx="128" cy="128" rx="100" ry="90" fill="none" stroke="white" stroke-width="20"/>
+    <path d="M 40 130 Q 128 200, 216 130" stroke="white" stroke-width="15" fill="none" stroke-linecap="round"/>
+  </g>
+
+  <!-- Text: PW (PantryWise) -->
+  <text x="256" y="380" font-family="Arial, sans-serif" font-size="100" font-weight="bold" fill="white" text-anchor="middle">PW</text>
+</svg>

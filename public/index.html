@@ -2,29 +2,43 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#000000" />
-    <meta
-      name="description"
-      content="Web site created using create-react-app"
-    />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
-    <!--
-      manifest.json provides metadata used when your web app is installed on a
-      user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/
-    -->
-    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <!--
-      Notice the use of %PUBLIC_URL% in the tags above.
-      It will be replaced with the URL of the `public` folder during the build.
-      Only files inside the `public` folder can be referenced from the HTML.
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes" />
 
-      Unlike "/favicon.ico" or "favicon.ico", "%PUBLIC_URL%/favicon.ico" will
-      work correctly both with client-side routing and a non-root public URL.
-      Learn how to configure a non-root public URL by running `npm run build`.
-    -->
-    <title>React App</title>
+    <!-- Favicon -->
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+
+    <!-- Primary Meta Tags -->
+    <meta name="description" content="PantryWise - Smart meal planning, pantry tracking, and grocery shopping made easy" />
+
+    <!-- ================================================================
+         PWA MANIFEST - Links to app configuration
+         ================================================================ -->
+    <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+
+    <!-- ================================================================
+         APPLE/iOS SPECIFIC META TAGS
+         These make the PWA work properly on iPhone
+         ================================================================ -->
+
+    <!-- App icon for iOS home screen -->
+    <link rel="apple-touch-icon" href="%PUBLIC_URL%/apple-touch-icon.png" />
+
+    <!-- Enable standalone mode (full-screen, no Safari UI) -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+
+    <!-- Status bar style (black-translucent = blend with content) -->
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <!-- App title on home screen -->
+    <meta name="apple-mobile-web-app-title" content="PantryWise" />
+
+    <!-- Theme color for browser/app bar -->
+    <meta name="theme-color" content="#3b82f6" />
+
+    <!-- Prevent automatic phone number detection -->
+    <meta name="format-detection" content="telephone=no" />
+
+    <title>PantryWise - Smart Meal Planner</title>
   </head>
   <body>
     <noscript>You need to enable JavaScript to run this app.</noscript>
